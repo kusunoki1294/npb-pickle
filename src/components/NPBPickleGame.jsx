@@ -6,16 +6,19 @@ import HowToPlayModal from "@/src/components/HowToPlayModal";
 import ResultModal from "@/src/components/ResultModal";
 import SearchBar from "@/src/components/SearchBar";
 import StatsModal from "@/src/components/StatsModal";
+import { UI_COPY, getPlayerDisplay } from "@/src/i18n/uiCopy";
 import players from "@/src/data/players";
 import {
   clearDailyGame,
   createInitialGameState,
   hasSeenHowToPlay,
   loadDailyGame,
+  loadLocale,
   loadStats,
   markHowToPlaySeen,
   recordCompletedGame,
   removeGameFromStats,
+  saveLocale,
   saveDailyGame,
 } from "@/src/utils/localStorage";
 import { getDailyPlayer, getDateKey } from "@/src/utils/getDailyPlayer";
@@ -48,6 +51,8 @@ export default function NPBPickleGame() {
   const [dateKey, setDateKey] = useState("");
   const [boardNumber, setBoardNumber] = useState(1);
   const [gameState, setGameState] = useState(null);
+  const [hasLoadedLocale, setHasLoadedLocale] = useState(false);
+  const [locale, setLocale] = useState("en");
   const [stats, setStats] = useState(loadStats());
   const [notice, setNotice] = useState("");
   const [shareMessage, setShareMessage] = useState("");
@@ -60,6 +65,22 @@ export default function NPBPickleGame() {
     () => new Map(players.map((player) => [player.id, player])),
     [],
   );
+  const copy = UI_COPY[locale];
+
+  useEffect(() => {
+    setLocale(loadLocale());
+    setHasLoadedLocale(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedLocale) {
+      return;
+    }
+
+    saveLocale(locale);
+    setNotice("");
+    setShareMessage("");
+  }, [hasLoadedLocale, locale]);
 
   useEffect(() => {
     const todayKey = getDateKey();
@@ -185,9 +206,9 @@ export default function NPBPickleGame() {
   const remainingGuesses = Math.max(MAX_GUESSES - guessedPlayers.length, 0);
   const scoreCaption = isGameOver
     ? gameState.status === "won"
-      ? "Solved today."
-      : "No guesses remaining."
-    : `${remainingGuesses} guesses remaining.`;
+      ? copy.solvedToday
+      : copy.noGuesses
+    : copy.guessesRemaining(remainingGuesses);
 
   function handleGuess(player) {
     if (!gameState || isGameOver) {
@@ -195,7 +216,7 @@ export default function NPBPickleGame() {
     }
 
     if (guessedIds.has(player.id)) {
-      setNotice(`${player.englishName} has already been guessed.`);
+      setNotice(copy.notices.alreadyGuessed(getPlayerDisplay(player, locale).primary));
       return;
     }
 
@@ -235,9 +256,9 @@ export default function NPBPickleGame() {
 
     try {
       await navigator.clipboard.writeText(shareText);
-      setShareMessage("Results copied to your clipboard.");
+      setShareMessage(copy.notices.shareCopied);
     } catch {
-      setShareMessage("Clipboard access failed.");
+      setShareMessage(copy.notices.shareFailed);
     }
   }
 
@@ -256,7 +277,7 @@ export default function NPBPickleGame() {
     clearDailyGame(dateKey);
     setStats(nextStats);
     setGameState(freshGameState);
-    setNotice("Today’s board was reset for development.");
+    setNotice(copy.notices.reset);
     setIsMenuOpen(false);
     setIsResultOpen(false);
     setShareMessage("");
@@ -274,9 +295,9 @@ export default function NPBPickleGame() {
 
   if (!gameState || !mysteryPlayer) {
     return (
-      <main className="page-shell">
-        <section className="game-card loading-state">
-          <p>Loading today&apos;s board...</p>
+      <main className={`page-shell locale-${locale}`}>
+        <section className="loading-state">
+          <p>{copy.loading}</p>
         </section>
       </main>
     );
@@ -284,27 +305,49 @@ export default function NPBPickleGame() {
 
   return (
     <>
-      <main className="page-shell">
-        <section className="game-card">
-          <header className="hero">
-            <div className="top-utility-bar">
-              <div className="locale-toggle" aria-label="Language choices">
-                <button className="locale-pill" type="button" aria-pressed="false">
-                  日本語
-                </button>
-                <button
-                  className="locale-pill locale-pill-active"
-                  type="button"
-                  aria-pressed="true"
-                >
-                  English
-                </button>
-              </div>
+      <main className={`page-shell locale-${locale}`}>
+        <section className="game-shell">
+          <div className="page-tools">
+            <div className="locale-switch" role="tablist" aria-label={copy.localeSwitchAria}>
+              <button
+                className={`locale-tab${locale === "ja" ? " locale-tab-active" : ""}`}
+                type="button"
+                role="tab"
+                aria-selected={locale === "ja"}
+                onClick={() => setLocale("ja")}
+              >
+                {copy.localeTabs.ja}
+              </button>
+              <button
+                className={`locale-tab${locale === "en" ? " locale-tab-active" : ""}`}
+                type="button"
+                role="tab"
+                aria-selected={locale === "en"}
+                onClick={() => setLocale("en")}
+              >
+                {copy.localeTabs.en}
+              </button>
+            </div>
+          </div>
 
-              <div className="utility-right">
-                <div className="utility-status">
-                  <span>Today&apos;s Board</span>
-                  <strong>{dateKey}</strong>
+          <header className="topbar-card">
+            <div className="topbar-main">
+              <span className="eyebrow">{copy.eyebrow}</span>
+              <h1>NPB Pickle</h1>
+              <p className="topbar-description">{copy.mastheadDescription}</p>
+            </div>
+
+            <div className="topbar-side">
+              <div className="topbar-controls">
+                <div className="board-meta" aria-label={copy.boardDetailsAria}>
+                  <div className="meta-item">
+                    <span>{copy.boardLabel}</span>
+                    <strong>#{String(boardNumber).padStart(3, "0")}</strong>
+                  </div>
+                  <div className="meta-item">
+                    <span>{copy.dateLabel}</span>
+                    <strong>{dateKey}</strong>
+                  </div>
                 </div>
 
                 <div className="menu-shell" ref={menuRef}>
@@ -312,7 +355,7 @@ export default function NPBPickleGame() {
                     className="menu-button"
                     type="button"
                     onClick={() => setIsMenuOpen((currentValue) => !currentValue)}
-                    aria-label="Open menu"
+                    aria-label={copy.menuAria}
                     aria-expanded={isMenuOpen}
                   >
                     <span />
@@ -329,7 +372,7 @@ export default function NPBPickleGame() {
                           setIsMenuOpen(false);
                         }}
                       >
-                        How to Play
+                        {copy.menuHowTo}
                       </button>
                       <button
                         type="button"
@@ -338,172 +381,142 @@ export default function NPBPickleGame() {
                           setIsMenuOpen(false);
                         }}
                       >
-                        Stats
+                        {copy.menuStats}
                       </button>
                       <button type="button" onClick={handleResetToday}>
-                        Reset Today&apos;s Game
+                        {copy.menuReset}
                       </button>
                       <button type="button" onClick={handleOpenAbout}>
-                        About
+                        {copy.menuAbout}
                       </button>
                     </div>
                   ) : null}
                 </div>
               </div>
             </div>
+          </header>
 
-            <div className="mode-rail" aria-label="Game modes">
-              <button className="mode-tab mode-tab-active" type="button">
-                Daily
-              </button>
-              <button className="mode-tab" type="button">
-                Practice
-              </button>
-              <button className="mode-tab" type="button">
-                Super easy mode
-              </button>
-              <button className="mode-tab" type="button">
-                Super hard mode
-              </button>
-            </div>
-
-            <div className="overview-card">
-              <div className="overview-main">
-                <div className="overview-copy">
-                  <span className="eyebrow">Daily Mystery NPB Player</span>
-                  <h1>NPB Pickle</h1>
-
-                  <div className="toolbar-row">
-                    <button
-                      className="toolbar-chip"
-                      type="button"
-                      onClick={() => setIsHowToPlayOpen(true)}
-                    >
-                      How it works
-                    </button>
-                    <button
-                      className="toolbar-chip toolbar-chip-active"
-                      type="button"
-                      onClick={() => setIsStatsOpen(true)}
-                    >
-                      Stats
-                    </button>
-                    {isGameOver && !isResultOpen ? (
-                      <button
-                        className="toolbar-chip"
-                        type="button"
-                        onClick={() => setIsResultOpen(true)}
-                      >
-                        View Result
-                      </button>
-                    ) : (
-                      <button
-                        className="toolbar-chip"
-                        type="button"
-                        onClick={handleShareResults}
-                      >
-                        Share
-                      </button>
-                    )}
-                    <button className="toolbar-chip" type="button" onClick={handleOpenAbout}>
-                      About
-                    </button>
-                  </div>
-
-                  <p className="board-meta">
-                    Daily board: {dateKey} · Board #{String(boardNumber).padStart(3, "0")}
-                  </p>
-                  <p className="overview-description">
-                    Guess the mystery NPB player in 9 tries. Green means exact,
-                    yellow means close, and gray means a miss.
-                  </p>
-                </div>
-
-                <div className="overview-stats">
-                  <div className="hero-stat-card">
-                    <span>Streak</span>
-                    <strong>{stats.currentStreak} days</strong>
-                  </div>
-                  <div className="hero-stat-card">
-                    <span>Best Streak</span>
-                    <strong>{stats.maxStreak} days</strong>
-                  </div>
-                  <div className="hero-stat-card">
-                    <span>Completed Boards</span>
-                    <strong>{stats.gamesPlayed}</strong>
-                  </div>
-                </div>
+          <section className="control-card">
+            <div className="control-head">
+              <div className="section-heading">
+                <h2>{copy.searchTitle}</h2>
+                <p>{copy.searchDescription}</p>
               </div>
 
-              <aside className="score-panel">
-                <span>Score</span>
+              <div className="score-inline">
+                <span>{copy.scoreLabel}</span>
                 <strong>
                   {guessedPlayers.length} / {MAX_GUESSES}
                 </strong>
                 <p>{scoreCaption}</p>
-                <div className="score-substats">
-                  <div>
-                    <span>Win rate</span>
-                    <strong>{stats.winPercentage}%</strong>
-                  </div>
-                </div>
-              </aside>
-            </div>
-          </header>
-
-          <section className="game-section">
-            <div className="section-heading">
-              <h2>Make a Guess</h2>
-              <p>Search by English or Japanese name to compare a player against today&apos;s answer.</p>
+              </div>
             </div>
 
             <SearchBar
+              copy={copy.search}
               players={players}
               guessedIds={guessedIds}
               disabled={isGameOver}
+              locale={locale}
               notice={notice}
               onGuess={handleGuess}
               setNotice={setNotice}
             />
 
             {shareMessage ? <p className="share-toast">{shareMessage}</p> : null}
+
+            <div className="mini-stats" aria-label={copy.progressSummaryAria}>
+              <article className="mini-stat">
+                <span>{copy.winRate}</span>
+                <strong>{stats.winPercentage}%</strong>
+              </article>
+              <article className="mini-stat">
+                <span>{copy.streakLabel}</span>
+                <strong>{copy.streakValue(stats.currentStreak)}</strong>
+              </article>
+              <article className="mini-stat">
+                <span>{copy.bestStreakLabel}</span>
+                <strong>{copy.bestStreakValue(stats.maxStreak)}</strong>
+              </article>
+              <article className="mini-stat">
+                <span>{copy.completedBoardsLabel}</span>
+                <strong>{stats.gamesPlayed}</strong>
+              </article>
+            </div>
+
+            <div className="action-row">
+              <button
+                className="toolbar-chip"
+                type="button"
+                onClick={() => setIsHowToPlayOpen(true)}
+              >
+                {copy.actionHowTo}
+              </button>
+              <button
+                className="toolbar-chip"
+                type="button"
+                onClick={() => setIsStatsOpen(true)}
+              >
+                {copy.actionStats}
+              </button>
+              {isGameOver && !isResultOpen ? (
+                <button
+                  className="toolbar-chip"
+                  type="button"
+                  onClick={() => setIsResultOpen(true)}
+                >
+                  {copy.actionViewResult}
+                </button>
+              ) : (
+                <button
+                  className="toolbar-chip"
+                  type="button"
+                  onClick={handleShareResults}
+                >
+                  {copy.actionShare}
+                </button>
+              )}
+              <button className="toolbar-chip" type="button" onClick={handleOpenAbout}>
+                {copy.actionAbout}
+              </button>
+            </div>
           </section>
 
-          <section className="game-section board-section">
+          <section className="board-card">
             <div className="section-heading">
-              <h2>Daily Results Board</h2>
-              <p>Every row reveals how close that guess was to the mystery player.</p>
+              <h2>{copy.boardTitle}</h2>
+              <p>{copy.boardDescription}</p>
             </div>
 
             <GameBoard
               boardDate={dateKey}
+              copy={copy.board}
               guesses={guessedPlayers}
+              locale={locale}
               maxGuesses={MAX_GUESSES}
               mysteryPlayer={mysteryPlayer}
             />
           </section>
 
-          <section className="about-card" id="about-section" ref={aboutRef}>
-            <h2>About</h2>
-            <p>
-              NPB Pickle is an unofficial fan-made guessing game. It is not
-              affiliated with NPB, its teams, or any official baseball
-              organization.
-            </p>
+          <section className="about-strip" id="about-section" ref={aboutRef}>
+            <p>{copy.aboutDescription}</p>
           </section>
         </section>
       </main>
 
-      <HowToPlayModal isOpen={isHowToPlayOpen} onClose={closeHowToPlay} />
+      <HowToPlayModal copy={copy.howTo} isOpen={isHowToPlayOpen} onClose={closeHowToPlay} />
       <StatsModal
+        copy={copy.statsModal}
         isOpen={isStatsOpen}
         onClose={() => setIsStatsOpen(false)}
         stats={stats}
       />
       <ResultModal
         boardNumber={boardNumber}
+        copy={copy.resultModal}
         guessCount={guessedPlayers.length}
         isOpen={isResultOpen}
+        locale={locale}
         mysteryPlayer={mysteryPlayer}
         onClose={() => setIsResultOpen(false)}
         onShare={handleShareResults}

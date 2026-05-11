@@ -2,7 +2,7 @@
 
 const GUESS_SLOTS = Array.from({ length: 9 }, (_, index) => String(index + 1));
 
-export default function StatsModal({ isOpen, onClose, stats }) {
+export default function StatsModal({ copy, isOpen, onClose, stats }) {
   if (!isOpen) {
     return null;
   }
@@ -23,44 +23,44 @@ export default function StatsModal({ isOpen, onClose, stats }) {
       >
         <div className="modal-header">
           <div>
-            <span className="modal-tag">Local Stats</span>
-            <h2 id="stats-title">Stats</h2>
+            <span className="modal-tag">{copy.tag}</span>
+            <h2 id="stats-title">{copy.title}</h2>
           </div>
           <button className="icon-close" type="button" onClick={onClose}>
-            Close
+            {copy.close}
           </button>
         </div>
 
         <div className="modal-body">
           <div className="stats-grid">
             <div className="stats-card">
-              <span>Games Played</span>
+              <span>{copy.gamesPlayed}</span>
               <strong>{stats.gamesPlayed}</strong>
             </div>
             <div className="stats-card">
-              <span>Wins</span>
+              <span>{copy.wins}</span>
               <strong>{stats.wins}</strong>
             </div>
             <div className="stats-card">
-              <span>Losses</span>
+              <span>{copy.losses}</span>
               <strong>{stats.losses}</strong>
             </div>
             <div className="stats-card">
-              <span>Win Percentage</span>
+              <span>{copy.winPercentage}</span>
               <strong>{stats.winPercentage}%</strong>
             </div>
             <div className="stats-card">
-              <span>Current Streak</span>
+              <span>{copy.currentStreak}</span>
               <strong>{stats.currentStreak}</strong>
             </div>
             <div className="stats-card">
-              <span>Max Streak</span>
+              <span>{copy.maxStreak}</span>
               <strong>{stats.maxStreak}</strong>
             </div>
           </div>
 
           <div className="distribution-card">
-            <strong>Guess Distribution</strong>
+            <strong>{copy.guessDistribution}</strong>
             <div className="distribution-list">
               {GUESS_SLOTS.map((guessSlot) => {
                 const count = stats.guessDistribution[guessSlot] || 0;

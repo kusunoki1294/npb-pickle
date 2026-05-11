@@ -1,0 +1,305 @@
+const TEAM_NAME_BY_LOCALE = {
+  ja: {
+    "Yomiuri Giants": "読売ジャイアンツ",
+    Giants: "巨人",
+    "Hanshin Tigers": "阪神タイガース",
+    Tigers: "阪神",
+    "Chunichi Dragons": "中日ドラゴンズ",
+    Dragons: "中日",
+    "Yokohama DeNA BayStars": "横浜DeNAベイスターズ",
+    BayStars: "DeNA",
+    "Hiroshima Toyo Carp": "広島東洋カープ",
+    Carp: "広島",
+    "Tokyo Yakult Swallows": "東京ヤクルトスワローズ",
+    Swallows: "ヤクルト",
+    "Fukuoka SoftBank Hawks": "福岡ソフトバンクホークス",
+    Hawks: "ソフトバンク",
+    "Hokkaido Nippon-Ham Fighters": "北海道日本ハムファイターズ",
+    Fighters: "日本ハム",
+    "Chiba Lotte Marines": "千葉ロッテマリーンズ",
+    Marines: "ロッテ",
+    "Tohoku Rakuten Golden Eagles": "東北楽天ゴールデンイーグルス",
+    Eagles: "楽天",
+    "Orix Buffaloes": "オリックス・バファローズ",
+    Buffaloes: "オリックス",
+    "Saitama Seibu Lions": "埼玉西武ライオンズ",
+    Lions: "西武",
+  },
+};
+
+const LEAGUE_LABELS = {
+  en: {
+    Central: "Central League",
+    Pacific: "Pacific League",
+  },
+  ja: {
+    Central: "セ・リーグ",
+    Pacific: "パ・リーグ",
+  },
+};
+
+export function getLocalizedTeamName(name, locale = "en") {
+  return TEAM_NAME_BY_LOCALE[locale]?.[name] ?? name;
+}
+
+export function getLocalizedLeagueName(league, locale = "en") {
+  return LEAGUE_LABELS[locale]?.[league] ?? league;
+}
+
+export function getPlayerDisplay(player, locale = "en") {
+  if (locale === "ja" && player?.japaneseName) {
+    return {
+      primary: player.japaneseName,
+      secondary: player.englishName ?? "",
+    };
+  }
+
+  return {
+    primary: player?.englishName ?? "",
+    secondary: player?.japaneseName ?? "",
+  };
+}
+
+export const UI_COPY = {
+  en: {
+    localeSwitchAria: "Language",
+    localeTabs: {
+      en: "English",
+      ja: "日本語",
+    },
+    loading: "Loading current board...",
+    eyebrow: "NPB Player Guessing Game",
+    mastheadDescription:
+      "One mystery player. Nine guesses. Each row checks team, handedness, birthplace, age, and position.",
+    boardDetailsAria: "Board details",
+    progressSummaryAria: "Progress summary",
+    boardLabel: "Board",
+    dateLabel: "Date",
+    menuAria: "Open game menu",
+    menuHowTo: "How to Play",
+    menuStats: "Stats",
+    menuReset: "Reset Board",
+    menuAbout: "About",
+    scoreLabel: "Score",
+    winRate: "Win rate",
+    boardsLabel: "Boards",
+    solvedToday: "Solved today.",
+    noGuesses: "No guesses remaining.",
+    guessesRemaining: (count) => `${count} guesses remaining.`,
+    searchKicker: "Search the roster",
+    searchTitle: "Make a guess",
+    searchDescription:
+      "Search by English or Japanese name, then submit a full match or choose from the suggestion list.",
+    actionHowTo: "How it works",
+    actionStats: "Stats",
+    actionViewResult: "View Result",
+    actionShare: "Share",
+    actionAbout: "About",
+    streakLabel: "Streak",
+    streakValue: (count) => `${count} days`,
+    streakDescription: "Keep solving boards on the first try to build momentum.",
+    bestStreakLabel: "Best streak",
+    bestStreakValue: (count) => `${count} days`,
+    bestStreakDescription: "Your longest run across saved local results.",
+    completedBoardsLabel: "Completed boards",
+    completedBoardsDescription: "Wins and losses are tracked locally on this browser.",
+    boardKicker: "Clue board",
+    boardTitle: "Track how close each guess gets",
+    boardDescription: "Green is exact, gold is close, and slate is a miss.",
+    aboutKicker: "About",
+    aboutTitle: "Unofficial fan project",
+    aboutDescription:
+      "NPB Pickle is an unofficial fan-made guessing game. It is not affiliated with NPB, its teams, or any official baseball organization.",
+    notices: {
+      shareCopied: "Results copied to your clipboard.",
+      shareFailed: "Clipboard access failed.",
+      reset: "Current board reset.",
+      alreadyGuessed: (name) => `${name} has already been guessed.`,
+    },
+    search: {
+      disabled:
+        "The current round is complete. Open the result or come back tomorrow.",
+      allMatchedGuessed: "Those matching players have already been guessed.",
+      noPlayersFound: (query) =>
+        `No players found for "${query}". Try an English or Japanese name.`,
+      typeHint: "Type at least 2 letters or characters to search the player pool.",
+      typeTooShort: "Type at least 2 letters or characters to search.",
+      alreadyGuessed: (name) => `${name} has already been guessed.`,
+      noMatchingPlayer:
+        "No matching player was found. Try a full English or Japanese name.",
+      chooseDropdown: "Choose one of the matching players from the dropdown.",
+      placeholder: "Search by English or Japanese player name...",
+      ariaLabel: "Search player names",
+      roundComplete: "Round Complete",
+      submitGuess: "Submit Guess",
+    },
+    board: {
+      ariaLabel: "Guess results",
+      headers: ["Player", "Team", "B", "T", "Born", "Age", "Pos"],
+      guessLabel: (count) => `Guess ${count}`,
+    },
+    howTo: {
+      tag: "First Visit Guide",
+      title: "How to Play",
+      close: "Close",
+      intro:
+        "Guess the mystery NPB player in 9 tries. Each guess is checked across the board and every cell gives you a clue.",
+      legend: [
+        { label: "Green", description: "Exact match." },
+        { label: "Yellow", description: "Close or partial match." },
+        { label: "Gray", description: "No match." },
+      ],
+      rulesTitle: "Category Rules",
+      rules: [
+        "Team: green for the same team, yellow for the same league.",
+        "B/T: green for the same bats or throws hand.",
+        "Born: green for the same birthplace, yellow for the same country or region.",
+        "Age: green for the exact age, yellow if it is within 2 years.",
+        "Position: green for the same primary position, yellow for an alternate match.",
+      ],
+    },
+    statsModal: {
+      tag: "Local Stats",
+      title: "Stats",
+      close: "Close",
+      gamesPlayed: "Games Played",
+      wins: "Wins",
+      losses: "Losses",
+      winPercentage: "Win Percentage",
+      currentStreak: "Current Streak",
+      maxStreak: "Max Streak",
+      guessDistribution: "Guess Distribution",
+    },
+    resultModal: {
+      tag: (boardNumber) => `Board #${String(boardNumber).padStart(3, "0")}`,
+      winTitle: "You got it!",
+      lossTitle: "Better luck tomorrow",
+      close: "Close",
+      share: "Share Results",
+      winBody: (guessCount) =>
+        `You found the mystery player in ${guessCount} ${
+          guessCount === 1 ? "guess" : "guesses"
+        }.`,
+      lossBody:
+        "The mystery player is revealed above. A new board arrives tomorrow.",
+    },
+  },
+  ja: {
+    localeSwitchAria: "言語",
+    localeTabs: {
+      en: "English",
+      ja: "日本語",
+    },
+    loading: "現在のボードを読み込み中...",
+    eyebrow: "NPB選手当てゲーム",
+    mastheadDescription:
+      "1人のミステリー選手を9回以内で当てます。各行では球団、打投、出身地、年齢、守備位置を比較します。",
+    boardDetailsAria: "ボード情報",
+    progressSummaryAria: "進行状況",
+    boardLabel: "ボード",
+    dateLabel: "日付",
+    menuAria: "ゲームメニューを開く",
+    menuHowTo: "遊び方",
+    menuStats: "成績",
+    menuReset: "ボードをリセット",
+    menuAbout: "このゲームについて",
+    scoreLabel: "スコア",
+    winRate: "勝率",
+    boardsLabel: "プレイ数",
+    solvedToday: "今日の問題をクリア。",
+    noGuesses: "残り予想はありません。",
+    guessesRemaining: (count) => `残り ${count} 回`,
+    searchKicker: "選手を検索",
+    searchTitle: "予想する",
+    searchDescription: "英語名または日本語名で検索してください",
+    actionHowTo: "遊び方",
+    actionStats: "成績",
+    actionViewResult: "結果を見る",
+    actionShare: "共有",
+    actionAbout: "このゲームについて",
+    streakLabel: "連勝",
+    streakValue: (count) => `${count}日`,
+    streakDescription: "連続で正解して記録を伸ばしましょう。",
+    bestStreakLabel: "最長連勝",
+    bestStreakValue: (count) => `${count}日`,
+    bestStreakDescription: "このブラウザに保存された最長記録です。",
+    completedBoardsLabel: "完了ボード",
+    completedBoardsDescription: "勝敗はこのブラウザにローカル保存されます。",
+    boardKicker: "ヒントボード",
+    boardTitle: "各予想がどれだけ近いか確認",
+    boardDescription: "緑は一致、金色は近い、灰色は不一致です。",
+    aboutKicker: "概要",
+    aboutTitle: "非公式ファン制作",
+    aboutDescription:
+      "NPB Pickle はファンが制作した非公式ゲームです。NPBおよび各球団、その他の公式団体とは関係ありません。",
+    notices: {
+      shareCopied: "結果をクリップボードにコピーしました。",
+      shareFailed: "クリップボードへのコピーに失敗しました。",
+      reset: "現在のボードをリセットしました。",
+      alreadyGuessed: (name) => `${name} はすでに予想済みです。`,
+    },
+    search: {
+      disabled: "このラウンドは終了しました。結果を見るか、明日のボードを待ってください。",
+      allMatchedGuessed: "該当する選手はすでに予想済みです。",
+      noPlayersFound: (query) =>
+        `「${query}」に一致する選手が見つかりません。英語名または日本語名で試してください。`,
+      typeHint: "検索するには2文字以上入力してください。",
+      typeTooShort: "検索するには2文字以上入力してください。",
+      alreadyGuessed: (name) => `${name} はすでに予想済みです。`,
+      noMatchingPlayer:
+        "一致する選手が見つかりませんでした。英語名または日本語名をフルネームで試してください。",
+      chooseDropdown: "候補リストから選手を選んでください。",
+      placeholder: "英語名または日本語名で検索...",
+      ariaLabel: "選手名を検索",
+      roundComplete: "終了",
+      submitGuess: "予想する",
+    },
+    board: {
+      ariaLabel: "予想結果",
+      headers: ["選手", "球団", "打", "投", "出身", "年齢", "守"],
+      guessLabel: (count) => `予想 ${count}`,
+    },
+    howTo: {
+      tag: "はじめに",
+      title: "遊び方",
+      close: "閉じる",
+      intro:
+        "9回以内にミステリーNPB選手を当ててください。各予想は盤面全体で判定され、各セルがヒントになります。",
+      legend: [
+        { label: "緑", description: "完全一致。" },
+        { label: "黄", description: "近い、または部分一致。" },
+        { label: "灰", description: "不一致。" },
+      ],
+      rulesTitle: "判定ルール",
+      rules: [
+        "球団: 同じ球団なら緑、同じリーグなら黄。",
+        "打投: 同じ打席または利き腕なら緑。",
+        "出身地: 同じ出身地なら緑、同じ国または地域なら黄。",
+        "年齢: 同年齢なら緑、2歳差以内なら黄。",
+        "守備位置: 同じ主ポジションなら緑、サブポジション一致なら黄。",
+      ],
+    },
+    statsModal: {
+      tag: "ローカル成績",
+      title: "成績",
+      close: "閉じる",
+      gamesPlayed: "プレイ数",
+      wins: "勝利",
+      losses: "敗北",
+      winPercentage: "勝率",
+      currentStreak: "現在の連勝",
+      maxStreak: "最長連勝",
+      guessDistribution: "予想分布",
+    },
+    resultModal: {
+      tag: (boardNumber) => `ボード #${String(boardNumber).padStart(3, "0")}`,
+      winTitle: "正解！",
+      lossTitle: "また明日",
+      close: "閉じる",
+      share: "結果を共有",
+      winBody: (guessCount) => `${guessCount}回でミステリー選手を当てました。`,
+      lossBody:
+        "ミステリー選手は上に表示されています。新しいボードは明日更新されます。",
+    },
+  },
+};

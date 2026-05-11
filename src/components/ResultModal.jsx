@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect } from "react";
+import {
+  getLocalizedLeagueName,
+  getLocalizedTeamName,
+  getPlayerDisplay,
+} from "@/src/i18n/uiCopy";
 
 export default function ResultModal({
   boardNumber,
+  copy,
   guessCount,
   isOpen,
+  locale,
   mysteryPlayer,
   onClose,
   onShare,
@@ -35,6 +42,9 @@ export default function ResultModal({
   }
 
   const isWin = status === "won";
+  const { primary, secondary } = getPlayerDisplay(mysteryPlayer, locale);
+  const teamLabel = getLocalizedTeamName(mysteryPlayer.team, locale);
+  const leagueLabel = getLocalizedLeagueName(mysteryPlayer.league, locale);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -47,39 +57,31 @@ export default function ResultModal({
       >
         <div className="modal-header">
           <div>
-            <span className="modal-tag">Board #{String(boardNumber).padStart(3, "0")}</span>
-            <h2 id="result-title">{isWin ? "You got it!" : "Better luck tomorrow"}</h2>
+            <span className="modal-tag">{copy.tag(boardNumber)}</span>
+            <h2 id="result-title">{isWin ? copy.winTitle : copy.lossTitle}</h2>
           </div>
           <button className="icon-close" type="button" onClick={onClose}>
-            Close
+            {copy.close}
           </button>
         </div>
 
         <div className="modal-body">
           <div className="result-highlight">
-            <strong>{mysteryPlayer.englishName}</strong>
-            {mysteryPlayer.japaneseName ? <span>{mysteryPlayer.japaneseName}</span> : null}
+            <strong>{primary}</strong>
+            {secondary ? <span>{secondary}</span> : null}
             <p>
-              {mysteryPlayer.team} • {mysteryPlayer.league} League •{" "}
-              {mysteryPlayer.positions.join(" / ")}
+              {teamLabel} • {leagueLabel} • {mysteryPlayer.positions.join(" / ")}
             </p>
           </div>
 
-          {isWin ? (
-            <p>
-              You found the mystery player in {guessCount}{" "}
-              {guessCount === 1 ? "guess" : "guesses"}.
-            </p>
-          ) : (
-            <p>The mystery player is revealed above. A new board arrives tomorrow.</p>
-          )}
+          <p>{isWin ? copy.winBody(guessCount) : copy.lossBody}</p>
 
           <div className="modal-actions">
             <button className="secondary-button" type="button" onClick={onShare}>
-              Share Results
+              {copy.share}
             </button>
             <button className="primary-button" type="button" onClick={onClose}>
-              Close
+              {copy.close}
             </button>
           </div>
 

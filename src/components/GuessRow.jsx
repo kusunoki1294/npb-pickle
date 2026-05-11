@@ -1,3 +1,4 @@
+import { getPlayerDisplay } from "@/src/i18n/uiCopy";
 import { compareGuess } from "@/src/utils/compareGuess";
 
 function DataCell({ cell }) {
@@ -11,20 +12,20 @@ function DataCell({ cell }) {
   );
 }
 
-export default function GuessRow({ boardDate, guess, mysteryPlayer }) {
-  const result = compareGuess(guess, mysteryPlayer, boardDate);
+export default function GuessRow({ boardDate, guess, locale, mysteryPlayer }) {
+  const result = compareGuess(guess, mysteryPlayer, boardDate, locale);
+  const { primary, secondary } = getPlayerDisplay(guess, locale);
 
   return (
     <div className="guess-row">
       <div className="cell player-cell sticky-cell">
         <div className="player-copy">
-          <strong>{guess.englishName}</strong>
-          {guess.japaneseName ? <span>{guess.japaneseName}</span> : null}
+          <strong>{primary}</strong>
+          {secondary ? <span>{secondary}</span> : null}
         </div>
       </div>
 
       <DataCell cell={result.team} />
-      <DataCell cell={result.league} />
       <DataCell cell={result.bats} />
       <DataCell cell={result.throws} />
       <DataCell cell={result.birthPlace} />

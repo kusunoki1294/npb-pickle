@@ -1,5 +1,6 @@
 const GAME_PREFIX = "npb-pickle:game:";
 const HOW_TO_PLAY_KEY = "npb-pickle:how-to-play-seen:v2";
+const LOCALE_KEY = "npb-pickle:locale:v1";
 const STATS_KEY = "npb-pickle:stats:v2";
 
 function canUseStorage() {
@@ -137,6 +138,22 @@ export function markHowToPlaySeen() {
   }
 
   window.localStorage.setItem(HOW_TO_PLAY_KEY, "true");
+}
+
+export function loadLocale() {
+  if (!canUseStorage()) {
+    return "en";
+  }
+
+  return window.localStorage.getItem(LOCALE_KEY) === "ja" ? "ja" : "en";
+}
+
+export function saveLocale(locale) {
+  if (!canUseStorage()) {
+    return;
+  }
+
+  window.localStorage.setItem(LOCALE_KEY, locale === "ja" ? "ja" : "en");
 }
 
 export function loadStats() {

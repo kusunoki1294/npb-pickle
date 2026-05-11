@@ -1,24 +1,24 @@
 import GuessRow from "@/src/components/GuessRow";
 
-const HEADERS = ["Player", "Team", "League", "B", "T", "Born", "Age", "Pos"];
-
 export default function GameBoard({
   boardDate,
+  copy,
   guesses,
+  locale,
   maxGuesses,
   mysteryPlayer,
 }) {
   const emptyRows = Math.max(maxGuesses - guesses.length, 0);
 
   return (
-    <section className="board-shell" aria-label="Guess results">
+    <section className="board-shell" aria-label={copy.ariaLabel}>
       <div className="board-scroll">
         <div className="board-grid">
           <div className="board-header">
-            {HEADERS.map((header) => (
+            {copy.headers.map((header, index) => (
               <div
                 key={header}
-                className={`header-cell${header === "Player" ? " header-sticky" : ""}`}
+                className={`header-cell${index === 0 ? " header-sticky" : ""}`}
               >
                 {header}
               </div>
@@ -30,6 +30,7 @@ export default function GameBoard({
               key={guess.id}
               boardDate={boardDate}
               guess={guess}
+              locale={locale}
               mysteryPlayer={mysteryPlayer}
             />
           ))}
@@ -37,9 +38,9 @@ export default function GameBoard({
           {Array.from({ length: emptyRows }).map((_, index) => (
             <div className="guess-row" key={`empty-${index}`}>
               <div className="cell-placeholder placeholder-label sticky-cell">
-                Guess {guesses.length + index + 1}
+                {copy.guessLabel(guesses.length + index + 1)}
               </div>
-              {Array.from({ length: 7 }).map((__, cellIndex) => (
+              {Array.from({ length: 6 }).map((__, cellIndex) => (
                 <div className="cell-placeholder" key={`empty-${index}-${cellIndex}`} />
               ))}
             </div>

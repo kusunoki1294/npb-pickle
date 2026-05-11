@@ -50,6 +50,80 @@ const REGION_BY_PREFECTURE = {
   Okinawa: "Kyushu",
 };
 
+const REGION_LABELS = {
+  ja: {
+    Hokkaido: "北海道",
+    Tohoku: "東北",
+    Kanto: "関東",
+    Chubu: "中部",
+    Kansai: "関西",
+    Chugoku: "中国",
+    Shikoku: "四国",
+    Kyushu: "九州",
+    Japan: "日本",
+  },
+};
+
+function getHintCopy(locale) {
+  if (locale === "ja") {
+    return {
+      exactAge: "同年齢",
+      targetOlder: "正解は年上",
+      targetYounger: "正解は年下",
+      primaryPositionMatch: "主ポジション一致",
+      alternatePositionMatch: "サブポジション一致",
+      noPositionMatch: "守備位置不一致",
+      sameTeam: "同球団",
+      sameLeague: "同リーグ",
+      differentLeague: "別リーグ",
+      leagueMatch: "リーグ一致",
+      leagueMiss: "リーグ不一致",
+      batsMatch: "打席一致",
+      batsMiss: "打席不一致",
+      throwsMatch: "利き腕一致",
+      throwsMiss: "利き腕不一致",
+      sameBirthplace: "出身地一致",
+      sameCountryPrefix: "同じ国: ",
+      sameRegionPrefix: "同地域: ",
+      differentBirthplace: "出身地不一致",
+    };
+  }
+
+  return {
+    exactAge: "Exact age",
+    targetOlder: "Target older",
+    targetYounger: "Target younger",
+    primaryPositionMatch: "Primary position match",
+    alternatePositionMatch: "Alternate position match",
+    noPositionMatch: "No position match",
+    sameTeam: "Same team",
+    sameLeague: "Same league",
+    differentLeague: "Different league",
+    leagueMatch: "League match",
+    leagueMiss: "League miss",
+    batsMatch: "Bats match",
+    batsMiss: "Bats miss",
+    throwsMatch: "Throws match",
+    throwsMiss: "Throws miss",
+    sameBirthplace: "Same birthplace",
+    sameCountryPrefix: "Same country: ",
+    sameRegionPrefix: "Same region: ",
+    differentBirthplace: "Different birthplace",
+  };
+}
+
+function formatRegion(region, locale) {
+  return REGION_LABELS[locale]?.[region] ?? region;
+}
+
+function formatCountry(country, locale) {
+  if (locale === "ja" && country === "Japan") {
+    return "日本";
+  }
+
+  return country;
+}
+
 function getBirthRegion(player) {
   if (player.country && player.country !== "Japan") {
     return player.country;
@@ -59,17 +133,21 @@ function getBirthRegion(player) {
   return REGION_BY_PREFECTURE[prefecture] || "Japan";
 }
 
-function getAgeHint(guessAge, targetAge) {
+function getAgeHint(guessAge, targetAge, locale) {
+  const copy = getHintCopy(locale);
+
   if (guessAge === targetAge) {
-    return "Exact age";
+    return copy.exactAge;
   }
 
-  return guessAge < targetAge ? "Target older" : "Target younger";
+  return guessAge < targetAge ? copy.targetOlder : copy.targetYounger;
 }
 
-function getPositionHint(guess, mysteryPlayer) {
+function getPositionHint(guess, mysteryPlayer, locale) {
+  const copy = getHintCopy(locale);
+
   if (guess.primaryPosition === mysteryPlayer.primaryPosition) {
-    return "Primary position match";
+    return copy.primaryPositionMatch;
   }
 
   if (
@@ -77,13 +155,14 @@ function getPositionHint(guess, mysteryPlayer) {
     mysteryPlayer.positions.includes(guess.primaryPosition) ||
     guess.positions.some((position) => mysteryPlayer.positions.includes(position))
   ) {
-    return "Alternate position match";
+    return copy.alternatePositionMatch;
   }
 
-  return "No position match";
+  return copy.noPositionMatch;
 }
 
-export function compareGuess(guess, mysteryPlayer, boardDate) {
+export function compareGuess(guess, mysteryPlayer, boardDate, locale = "en") {
+  const copy = getHintCopy(locale);
   const guessAge = calculateAge(guess.birthDate, boardDate);
   const mysteryAge = calculateAge(mysteryPlayer.birthDate, boardDate);
   const ageDifference = Math.abs(guessAge - mysteryAge);
@@ -105,29 +184,25 @@ export function compareGuess(guess, mysteryPlayer, boardDate) {
             : "miss",
       hint:
         guess.team === mysteryPlayer.team
-          ? "Same team"
+          ? copy.sameTeam
           : guess.league === mysteryPlayer.league
-            ? "Same league"
-            : "Different league",
+            ? copy.sameLeague
+            : copy.differentLeague,
     },
     league: {
       value: guess.league,
       status: guess.league === mysteryPlayer.league ? "exact" : "miss",
-      hint:
-        guess.league === mysteryPlayer.league
-          ? "League match"
-          : "League miss",
+      hint: guess.league === mysteryPlayer.league ? copy.leagueMatch : copy.leagueMiss,
     },
     bats: {
       value: guess.bats,
       status: guess.bats === mysteryPlayer.bats ? "exact" : "miss",
-      hint: guess.bats === mysteryPlayer.bats ? "Bats match" : "Bats miss",
+      hint: guess.bats === mysteryPlayer.bats ? copy.batsMatch : copy.batsMiss,
     },
     throws: {
       value: guess.throws,
       status: guess.throws === mysteryPlayer.throws ? "exact" : "miss",
-      hint:
-        guess.throws === mysteryPlayer.throws ? "Throws match" : "Throws miss",
+      hint: guess.throws === mysteryPlayer.throws ? copy.throwsMatch : copy.throwsMiss,
     },
     birthPlace: {
       value: guess.birthPlace,
@@ -139,17 +214,17 @@ export function compareGuess(guess, mysteryPlayer, boardDate) {
             : "miss",
       hint:
         guess.birthPlace === mysteryPlayer.birthPlace
-          ? "Same birthplace"
+          ? copy.sameBirthplace
           : sameCountry && guess.country !== "Japan"
-            ? `Same country: ${guess.country}`
+            ? `${copy.sameCountryPrefix}${formatCountry(guess.country, locale)}`
             : sameRegion
-              ? `Same region: ${getBirthRegion(guess)}`
-              : "Different birthplace",
+              ? `${copy.sameRegionPrefix}${formatRegion(getBirthRegion(guess), locale)}`
+              : copy.differentBirthplace,
     },
     age: {
       value: guessAge,
       status: ageDifference === 0 ? "exact" : ageDifference <= 2 ? "close" : "miss",
-      hint: getAgeHint(guessAge, mysteryAge),
+      hint: getAgeHint(guessAge, mysteryAge, locale),
     },
     position: {
       value: guess.primaryPosition,
@@ -159,7 +234,7 @@ export function compareGuess(guess, mysteryPlayer, boardDate) {
           : hasAlternatePositionMatch
             ? "close"
             : "miss",
-      hint: getPositionHint(guess, mysteryPlayer),
+      hint: getPositionHint(guess, mysteryPlayer, locale),
     },
   };
 }

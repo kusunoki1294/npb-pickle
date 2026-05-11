@@ -1,15 +1,6 @@
 "use client";
 
-const CATEGORY_RULES = [
-  "Team: green for the same team, yellow for the same league.",
-  "League: green for the same league.",
-  "B/T: green for the same bats or throws hand.",
-  "Born: green for the same birthplace, yellow for the same country or region.",
-  "Age: green for the exact age, yellow if it is within 2 years.",
-  "Position: green for the same primary position, yellow for an alternate match.",
-];
-
-export default function HowToPlayModal({ isOpen, onClose }) {
+export default function HowToPlayModal({ copy, isOpen, onClose }) {
   if (!isOpen) {
     return null;
   }
@@ -25,42 +16,39 @@ export default function HowToPlayModal({ isOpen, onClose }) {
       >
         <div className="modal-header">
           <div>
-            <span className="modal-tag">First Visit Guide</span>
-            <h2 id="how-to-play-title">How to Play</h2>
+            <span className="modal-tag">{copy.tag}</span>
+            <h2 id="how-to-play-title">{copy.title}</h2>
           </div>
           <button className="icon-close" type="button" onClick={onClose}>
-            Close
+            {copy.close}
           </button>
         </div>
 
         <div className="modal-body">
-          <p>
-            Guess the mystery NPB player in 9 tries. Each guess is checked
-            across the board and every cell gives you a clue.
-          </p>
+          <p>{copy.intro}</p>
 
           <div className="legend-grid">
             <div className="legend-card">
               <span className="legend-swatch exact" />
-              <strong>Green</strong>
-              <p>Exact match.</p>
+              <strong>{copy.legend[0].label}</strong>
+              <p>{copy.legend[0].description}</p>
             </div>
             <div className="legend-card">
               <span className="legend-swatch close" />
-              <strong>Yellow</strong>
-              <p>Close or partial match.</p>
+              <strong>{copy.legend[1].label}</strong>
+              <p>{copy.legend[1].description}</p>
             </div>
             <div className="legend-card">
               <span className="legend-swatch miss" />
-              <strong>Gray</strong>
-              <p>No match.</p>
+              <strong>{copy.legend[2].label}</strong>
+              <p>{copy.legend[2].description}</p>
             </div>
           </div>
 
           <div className="rules-card">
-            <strong>Category Rules</strong>
+            <strong>{copy.rulesTitle}</strong>
             <ul className="modal-list">
-              {CATEGORY_RULES.map((rule) => (
+              {copy.rules.map((rule) => (
                 <li key={rule}>{rule}</li>
               ))}
             </ul>

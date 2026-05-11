@@ -1,6 +1,7 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { getLocalizedTeamName, getPlayerDisplay } from "@/src/i18n/uiCopy";
 
 function normalizeSearchValue(value) {
   return value
@@ -19,15 +20,19 @@ function matchesPlayer(player, normalizedQuery) {
 }
 
 export default function SearchBar({
+  copy,
   players,
   guessedIds,
   disabled,
+  locale,
   notice,
   onGuess,
   setNotice,
 }) {
+  const searchRef = useRef(null);
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedPlayerId, setSelectedPlayerId] = useState(null);
   const deferredQuery = useDeferredValue(query);
   const normalizedQuery = normalizeSearchValue(deferredQuery.trim());
 
@@ -46,7 +51,7 @@ export default function SearchBar({
 
   const helperMessage = useMemo(() => {
     if (disabled) {
-      return "The daily round is complete. Open the result or come back tomorrow.";
+      return copy.disabled;
     }
 
     if (notice) {
@@ -54,17 +59,18 @@ export default function SearchBar({
     }
 
     if (normalizedQuery.length >= 2 && allMatches.length > 0 && availableMatches.length === 0) {
-      return "Those matching players have already been guessed.";
+      return copy.allMatchedGuessed;
     }
 
     if (normalizedQuery.length >= 2 && allMatches.length === 0) {
-      return `No players found for “${deferredQuery.trim()}”. Try an English or Japanese name.`;
+      return copy.noPlayersFound(deferredQuery.trim());
     }
 
-    return "Type at least 2 letters or characters to search the player pool.";
+    return copy.typeHint;
   }, [
     allMatches.length,
     availableMatches.length,
+    copy,
     deferredQuery,
     disabled,
     normalizedQuery.length,
@@ -77,22 +83,89 @@ export default function SearchBar({
       return;
     }
 
+    if (selectedPlayerId) {
+      setIsOpen(false);
+      return;
+    }
+
     setIsOpen(availableMatches.length > 0);
-  }, [availableMatches.length, normalizedQuery.length]);
+  }, [availableMatches.length, normalizedQuery.length, selectedPlayerId]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    function handlePointerDown(event) {
+      if (!searchRef.current?.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
+
+    window.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!selectedPlayerId) {
+      return;
+    }
+
+    const selectedPlayer = players.find((player) => player.id === selectedPlayerId);
+
+    if (!selectedPlayer) {
+      setSelectedPlayerId(null);
+      return;
+    }
+
+    setQuery(getPlayerDisplay(selectedPlayer, locale).primary);
+  }, [locale, players, selectedPlayerId]);
 
   function submitGuess(player) {
     onGuess(player);
     setQuery("");
     setIsOpen(false);
+    setSelectedPlayerId(null);
+  }
+
+  function selectPlayer(player) {
+    setSelectedPlayerId(player.id);
+    setQuery(getPlayerDisplay(player, locale).primary);
+    setIsOpen(false);
+    setNotice("");
   }
 
   function handleSubmit(event) {
     event.preventDefault();
 
     const normalizedInput = normalizeSearchValue(query.trim());
+    const selectedPlayer = selectedPlayerId
+      ? players.find((player) => player.id === selectedPlayerId)
+      : null;
 
     if (normalizedInput.length < 2) {
-      setNotice("Type at least 2 letters or characters to search.");
+      setNotice(copy.typeTooShort);
+      return;
+    }
+
+    if (selectedPlayer) {
+      if (guessedIds.has(selectedPlayer.id)) {
+        setNotice(copy.alreadyGuessed(getPlayerDisplay(selectedPlayer, locale).primary));
+        return;
+      }
+
+      submitGuess(selectedPlayer);
       return;
     }
 
@@ -104,7 +177,7 @@ export default function SearchBar({
     );
 
     if (duplicateExact) {
-      setNotice(`${duplicateExact.englishName} has already been guessed.`);
+      setNotice(copy.alreadyGuessed(getPlayerDisplay(duplicateExact, locale).primary));
       return;
     }
 
@@ -126,16 +199,17 @@ export default function SearchBar({
     }
 
     if (availableMatches.length === 0) {
-      setNotice("No matching player was found. Try a full English or Japanese name.");
+      setNotice(copy.noMatchingPlayer);
       return;
     }
 
-    setNotice("Choose one of the matching players from the dropdown.");
+    setNotice(copy.chooseDropdown);
     setIsOpen(true);
   }
 
   function handleChange(event) {
     setQuery(event.target.value);
+    setSelectedPlayerId(null);
 
     if (notice) {
       setNotice("");
@@ -143,7 +217,7 @@ export default function SearchBar({
   }
 
   return (
-    <section className="search-panel">
+    <section className="search-panel" ref={searchRef}>
       <form className="search-form" onSubmit={handleSubmit}>
         <div className="search-row">
           <input
@@ -152,45 +226,44 @@ export default function SearchBar({
             value={query}
             onChange={handleChange}
             onFocus={() => {
-              if (availableMatches.length > 0) {
+              if (!selectedPlayerId && availableMatches.length > 0) {
                 setIsOpen(true);
               }
             }}
-            onBlur={() => {
-              window.setTimeout(() => setIsOpen(false), 110);
-            }}
-            placeholder="Search by English or Japanese player name..."
+            placeholder={copy.placeholder}
             autoComplete="off"
-            aria-label="Search player names"
+            aria-label={copy.ariaLabel}
             disabled={disabled}
           />
           <button className="guess-button" type="submit" disabled={disabled}>
-            {disabled ? "Round Complete" : "Submit Guess"}
+            {disabled ? copy.roundComplete : copy.submitGuess}
           </button>
         </div>
 
         {isOpen && availableMatches.length > 0 ? (
           <ul className="suggestion-list">
-            {availableMatches.map((player) => (
-              <li key={player.id}>
-                <button
-                  className="suggestion-item"
-                  type="button"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => submitGuess(player)}
-                >
-                  <div>
-                    <span className="suggestion-name">{player.englishName}</span>
-                    {player.japaneseName ? (
-                      <span className="suggestion-alt">{player.japaneseName}</span>
-                    ) : null}
-                  </div>
-                  <span className="suggestion-meta">
-                    {player.teamShort} • {player.primaryPosition}
-                  </span>
-                </button>
-              </li>
-            ))}
+            {availableMatches.map((player) => {
+              const { primary, secondary } = getPlayerDisplay(player, locale);
+
+              return (
+                <li key={player.id}>
+                  <button
+                    className="suggestion-item"
+                    type="button"
+                    onPointerDown={(event) => event.preventDefault()}
+                    onClick={() => selectPlayer(player)}
+                  >
+                    <div>
+                      <span className="suggestion-name">{primary}</span>
+                      {secondary ? <span className="suggestion-alt">{secondary}</span> : null}
+                    </div>
+                    <span className="suggestion-meta">
+                      {getLocalizedTeamName(player.teamShort, locale)} • {player.primaryPosition}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         ) : null}
       </form>
