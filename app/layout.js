@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "NPB Pickle",
+  title: "NPB Silhouette",
   description: "A daily mystery-player guessing game built around NPB players.",
 };
 

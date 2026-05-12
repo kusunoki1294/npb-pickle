@@ -8,16 +8,16 @@ import {
   getPlayerDisplay,
 } from "@/src/i18n/uiCopy";
 
-const CONFETTI_PIECES = Array.from({ length: 26 }, (_, index) => ({
+const CONFETTI_PIECES = Array.from({ length: 52 }, (_, index) => ({
   id: index,
   color: `hsl(${(index * 43) % 360} 80% 58%)`,
-  x: `${(index % 2 === 0 ? -1 : 1) * (20 + ((index * 17) % 210))}px`,
-  xEnd: `${(index % 2 === 0 ? -1 : 1) * (34 + ((index * 21) % 248))}px`,
-  lift: `${170 + ((index * 29) % 170)}px`,
-  fall: `${68 + ((index * 19) % 40)}px`,
-  size: `${8 + ((index * 7) % 8)}px`,
-  delay: `${((index * 13) % 18) / 100}s`,
-  duration: `${1.85 + ((index * 11) % 50) / 100}s`,
+  x: `${(index % 2 === 0 ? -1 : 1) * (60 + ((index * 29) % 520))}px`,
+  xEnd: `${(index % 2 === 0 ? -1 : 1) * (110 + ((index * 37) % 700))}px`,
+  lift: `${300 + ((index * 31) % 340)}px`,
+  fall: `${150 + ((index * 23) % 160)}px`,
+  size: `${14 + ((index * 11) % 14)}px`,
+  delay: `${((index * 9) % 28) / 100}s`,
+  duration: `${2.45 + ((index * 13) % 55) / 100}s`,
   rotate: `${140 + ((index * 47) % 260)}deg`,
   rotateEnd: `${220 + ((index * 61) % 320)}deg`,
   radius: index % 5 === 0 ? "999px" : index % 3 === 0 ? "2px" : "1px",
@@ -31,8 +31,7 @@ export default function ResultModal({
   locale,
   mysteryPlayer,
   onClose,
-  onShare,
-  shareMessage,
+  shareText,
   status,
 }) {
   useEffect(() => {
@@ -117,15 +116,12 @@ export default function ResultModal({
           <p>{isWin ? copy.winBody(guessCount) : copy.lossBody}</p>
 
           <div className="modal-actions">
-            <button className="secondary-button" type="button" onClick={onShare}>
-              {copy.share}
-            </button>
             <button className="primary-button" type="button" onClick={onClose}>
               {copy.close}
             </button>
           </div>
 
-          {shareMessage ? <p className="share-toast modal-share">{shareMessage}</p> : null}
+          {shareText ? <pre className="result-share-block">{shareText}</pre> : null}
         </div>
       </section>
     </div>

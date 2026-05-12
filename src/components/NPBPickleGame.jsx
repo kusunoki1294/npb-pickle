@@ -193,7 +193,6 @@ export default function NPBPickleGame() {
   const [locale, setLocale] = useState("en");
   const [stats, setStats] = useState(() => loadStats());
   const [notice, setNotice] = useState("");
-  const [shareMessage, setShareMessage] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
@@ -386,20 +385,6 @@ export default function NPBPickleGame() {
     };
   }, [isMenuOpen]);
 
-  useEffect(() => {
-    if (!shareMessage) {
-      return undefined;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setShareMessage("");
-    }, 2200);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [shareMessage]);
-
   const mysteryPlayer = gameState ? playerMap.get(gameState.mysteryPlayerId) : null;
   const guessedPlayers = useMemo(() => {
     if (!gameState) {
@@ -418,6 +403,19 @@ export default function NPBPickleGame() {
     () => players.filter((player) => !guessedIds.has(player.id)),
     [guessedIds],
   );
+  const resultShareText = useMemo(() => {
+    if (!mysteryPlayer) {
+      return "";
+    }
+
+    return buildShareResults({
+      boardNumber,
+      boardDate: dateKey,
+      guesses: guessedPlayers,
+      maxGuesses: MAX_GUESSES,
+      mysteryPlayer,
+    });
+  }, [boardNumber, dateKey, guessedPlayers, mysteryPlayer]);
   const isGameOver = gameState?.status === "won" || gameState?.status === "lost";
   const remainingGuesses = Math.max(MAX_GUESSES - guessedPlayers.length, 0);
   const scoreCaption = isGameOver
@@ -619,27 +617,6 @@ export default function NPBPickleGame() {
 
     const randomIndex = Math.floor(Math.random() * remainingPlayers.length);
     handleGuess(remainingPlayers[randomIndex]);
-  }
-
-  async function handleShareResults() {
-    if (!mysteryPlayer) {
-      return;
-    }
-
-    const shareText = buildShareResults({
-      boardNumber,
-      boardDate: dateKey,
-      guesses: guessedPlayers,
-      mysteryPlayer,
-      maxGuesses: MAX_GUESSES,
-    });
-
-    try {
-      await navigator.clipboard.writeText(shareText);
-      setShareMessage(copy.notices.shareCopied);
-    } catch {
-      setShareMessage(copy.notices.shareFailed);
-    }
   }
 
   function handleOpenAbout() {
@@ -863,8 +840,6 @@ export default function NPBPickleGame() {
               setNotice={setNotice}
             />
 
-            {shareMessage ? <p className="share-toast">{shareMessage}</p> : null}
-
             <div className="mini-stats" aria-label={copy.progressSummaryAria}>
               <article className="mini-stat">
                 <span>{copy.winRate}</span>
@@ -954,8 +929,7 @@ export default function NPBPickleGame() {
         locale={locale}
         mysteryPlayer={mysteryPlayer}
         onClose={() => setIsResultOpen(false)}
-        onShare={handleShareResults}
-        shareMessage={shareMessage}
+        shareText={resultShareText}
         status={gameState.status}
       />
     </>
