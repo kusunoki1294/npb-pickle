@@ -3,6 +3,7 @@ const HOW_TO_PLAY_KEY = "npb-pickle:how-to-play-seen:v2";
 const LOCALE_KEY = "npb-pickle:locale:v1";
 const LEGACY_STATS_KEY = "npb-pickle:stats:v2";
 const STATS_PREFIX = "npb-pickle:stats:v3:";
+const GUEST_MIGRATION_DECISION_PREFIX = "npb-pickle:guest-migration:v1:";
 
 function canUseStorage() {
   return typeof window !== "undefined" && Boolean(window.localStorage);
@@ -36,8 +37,16 @@ function getStatsKey(userId) {
   return `${STATS_PREFIX}${getStorageScope(userId)}`;
 }
 
+function getGuestMigrationDecisionKey(userId) {
+  return `${GUEST_MIGRATION_DECISION_PREFIX}${userId}`;
+}
+
 function readStoredJson(key) {
   return safeParse(window.localStorage.getItem(key));
+}
+
+function readStoredText(key) {
+  return window.localStorage.getItem(key);
 }
 
 function createEmptyGuessDistribution() {
@@ -244,6 +253,16 @@ function saveStatsHistory(history, userId = null) {
   return nextStats;
 }
 
+function isInitialScopedGame(gameState) {
+  return Boolean(
+    gameState &&
+      gameState.status === "playing" &&
+      !gameState.statsRecorded &&
+      Array.isArray(gameState.guessIds) &&
+      gameState.guessIds.length === 0,
+  );
+}
+
 export function recordCompletedGame({ dateKey, status, guessCount }, userId = null) {
   const currentStats = loadStats(userId);
 
@@ -310,7 +329,40 @@ function listGuestDateKeys() {
   return [...dateKeys];
 }
 
-export function migrateGuestDataToUser(userId) {
+function clearGuestScopedData() {
+  if (!canUseStorage()) {
+    return;
+  }
+
+  window.localStorage.removeItem(getStatsKey(null));
+  window.localStorage.removeItem(LEGACY_STATS_KEY);
+
+  for (const dateKey of listGuestDateKeys()) {
+    clearDailyGame(dateKey, null);
+  }
+}
+
+export function hasGuestDataToMigrate(userId) {
+  if (!canUseStorage() || !userId) {
+    return false;
+  }
+
+  if (readStoredText(getGuestMigrationDecisionKey(userId))) {
+    return false;
+  }
+
+  return Object.keys(loadStats().history).length > 0 || listGuestDateKeys().length > 0;
+}
+
+export function dismissGuestMigrationPrompt(userId) {
+  if (!canUseStorage() || !userId) {
+    return;
+  }
+
+  window.localStorage.setItem(getGuestMigrationDecisionKey(userId), "dismissed");
+}
+
+export function migrateGuestDataToUser(userId, { clearGuestData = false } = {}) {
   if (!canUseStorage() || !userId) {
     return;
   }
@@ -328,11 +380,18 @@ export function migrateGuestDataToUser(userId) {
 
   for (const dateKey of listGuestDateKeys()) {
     const guestGame = loadDailyGame(dateKey);
+    const userGame = loadDailyGame(dateKey, userId);
 
-    if (!guestGame || loadDailyGame(dateKey, userId)) {
+    if (!guestGame || (userGame && !isInitialScopedGame(userGame))) {
       continue;
     }
 
     saveDailyGame(dateKey, guestGame, userId);
+  }
+
+  window.localStorage.setItem(getGuestMigrationDecisionKey(userId), "imported");
+
+  if (clearGuestData) {
+    clearGuestScopedData();
   }
 }

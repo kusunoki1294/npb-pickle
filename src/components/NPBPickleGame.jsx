@@ -11,7 +11,9 @@ import { UI_COPY, getPlayerDisplay } from "@/src/i18n/uiCopy";
 import { hasSupabaseConfig, supabase } from "@/src/lib/supabase";
 import {
   createInitialGameState,
+  dismissGuestMigrationPrompt,
   hasSeenHowToPlay,
+  hasGuestDataToMigrate,
   loadDailyGame,
   loadLocale,
   loadStats,
@@ -202,6 +204,9 @@ export default function NPBPickleGame() {
   const [authSession, setAuthSession] = useState(null);
   const [authReady, setAuthReady] = useState(!supabase);
   const [authForms, setAuthForms] = useState(INITIAL_AUTH_FORMS);
+  const [isGuestMigrationPromptOpen, setIsGuestMigrationPromptOpen] = useState(false);
+  const [guestMigrationLoading, setGuestMigrationLoading] = useState(false);
+  const [hasScopedGameInStorage, setHasScopedGameInStorage] = useState(false);
 
   const playerMap = useMemo(
     () => new Map(players.map((player) => [player.id, player])),
@@ -273,14 +278,6 @@ export default function NPBPickleGame() {
   }, []);
 
   useEffect(() => {
-    if (!activeUserId || (hasSupabaseConfig && !authReady)) {
-      return;
-    }
-
-    migrateGuestDataToUser(activeUserId);
-  }, [activeUserId, authReady]);
-
-  useEffect(() => {
     if (hasSupabaseConfig && !authReady) {
       return;
     }
@@ -288,10 +285,13 @@ export default function NPBPickleGame() {
     const todayKey = getDateKey();
     const dailySelection = getDailyPlayer(players, todayKey);
     const savedGame = loadDailyGame(todayKey, activeUserId);
+    const shouldPromptGuestMigration = hasGuestDataToMigrate(activeUserId);
 
     setDateKey(todayKey);
     setBoardNumber(dailySelection.boardNumber);
     setStats(loadStats(activeUserId));
+    setHasScopedGameInStorage(Boolean(savedGame));
+    setIsGuestMigrationPromptOpen(shouldPromptGuestMigration);
     setNotice("");
     setShareMessage("");
 
@@ -327,8 +327,12 @@ export default function NPBPickleGame() {
       return;
     }
 
+    if (activeUserId && isGuestMigrationPromptOpen && !hasScopedGameInStorage) {
+      return;
+    }
+
     saveDailyGame(dateKey, gameState, activeUserId);
-  }, [activeUserId, dateKey, gameState]);
+  }, [activeUserId, dateKey, gameState, hasScopedGameInStorage, isGuestMigrationPromptOpen]);
 
   useEffect(() => {
     if (!gameState || gameState.status === "playing" || gameState.statsRecorded) {
@@ -532,6 +536,47 @@ export default function NPBPickleGame() {
     setAuthMode(nextMode);
   }
 
+  function handleImportGuestProgress() {
+    if (!activeUserId || !dateKey) {
+      return;
+    }
+
+    setGuestMigrationLoading(true);
+    migrateGuestDataToUser(activeUserId, { clearGuestData: true });
+
+    const importedStats = loadStats(activeUserId);
+    const importedGame = loadDailyGame(dateKey, activeUserId);
+
+    setStats(importedStats);
+    setHasScopedGameInStorage(true);
+    setIsGuestMigrationPromptOpen(false);
+    setNotice(copy.guestMigrationImported);
+
+    if (importedGame) {
+      const nextState = sanitizeGameState(
+        importedGame,
+        gameState?.mysteryPlayerId,
+        boardNumber,
+        playerMap,
+      );
+
+      setGameState(nextState);
+      setIsResultOpen(nextState.status !== "playing");
+    }
+
+    setGuestMigrationLoading(false);
+  }
+
+  function handleDismissGuestMigration() {
+    if (!activeUserId) {
+      return;
+    }
+
+    dismissGuestMigrationPrompt(activeUserId);
+    setHasScopedGameInStorage(true);
+    setIsGuestMigrationPromptOpen(false);
+  }
+
   function handleGuess(player) {
     if (!gameState || isGameOver) {
       return;
@@ -665,6 +710,33 @@ export default function NPBPickleGame() {
               )}
             </div>
           </div>
+
+          {isGuestMigrationPromptOpen ? (
+            <section className="migration-banner">
+              <div>
+                <strong>{copy.guestMigrationTitle}</strong>
+                <p>{copy.guestMigrationBody}</p>
+              </div>
+              <div className="migration-actions">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={handleDismissGuestMigration}
+                  disabled={guestMigrationLoading}
+                >
+                  {copy.guestMigrationSkip}
+                </button>
+                <button
+                  className="primary-button"
+                  type="button"
+                  onClick={handleImportGuestProgress}
+                  disabled={guestMigrationLoading}
+                >
+                  {copy.guestMigrationImport}
+                </button>
+              </div>
+            </section>
+          ) : null}
 
           <header className="topbar-card">
             <div className="topbar-main">

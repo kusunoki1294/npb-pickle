@@ -76,6 +76,7 @@ p {
 }
 
 .loading-state,
+.migration-banner,
 .topbar-card,
 .control-card,
 .board-card,
@@ -95,6 +96,32 @@ p {
 .loading-state p {
   margin: 0;
   color: var(--muted);
+}
+
+.migration-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+}
+
+.migration-banner strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.migration-banner p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.migration-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .topbar-card {
@@ -861,6 +888,7 @@ p {
 
 @media (max-width: 860px) {
   .page-tools,
+  .migration-banner,
   .topbar-card,
   .topbar-controls,
   .control-head,
@@ -878,6 +906,10 @@ p {
     width: 100%;
     justify-content: flex-start;
     margin-left: 0;
+  }
+
+  .migration-actions {
+    justify-content: flex-start;
   }
 
   .mini-stats,
@@ -923,6 +955,10 @@ p {
   }
 
   .account-actions > * {
+    width: 100%;
+  }
+
+  .migration-actions > * {
     width: 100%;
   }
 
