@@ -230,7 +230,6 @@ export default function NPBPickleGame() {
 
     saveLocale(locale);
     setNotice("");
-    setShareMessage("");
   }, [hasLoadedLocale, locale]);
 
   useEffect(() => {
@@ -292,7 +291,6 @@ export default function NPBPickleGame() {
     setHasScopedGameInStorage(Boolean(savedGame));
     setIsGuestMigrationPromptOpen(shouldPromptGuestMigration);
     setNotice("");
-    setShareMessage("");
 
     if (!hasSeenHowToPlay()) {
       setIsHowToPlayOpen(true);
