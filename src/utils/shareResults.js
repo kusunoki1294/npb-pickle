@@ -1,9 +1,9 @@
 import { compareGuess } from "@/src/utils/compareGuess";
 
 const SQUARES = {
-  exact: "🟩",
-  close: "🟨",
-  miss: "⬛",
+  exact: "🟢",
+  close: "🟡",
+  miss: "⚫",
 };
 
 function getRowStatuses(result) {
@@ -33,7 +33,7 @@ export function buildShareResults({
   });
 
   return [
-    `NPB Pickle #${String(boardNumber).padStart(3, "0")}`,
+    `NPB Silhouette #${String(boardNumber).padStart(3, "0")}`,
     didWin ? `${guesses.length}/${maxGuesses}` : `X/${maxGuesses}`,
     "",
     ...rows,

@@ -11,6 +11,7 @@ import {
 const CONFETTI_PIECES = Array.from({ length: 52 }, (_, index) => ({
   id: index,
   color: `hsl(${(index * 43) % 360} 80% 58%)`,
+  colorEnd: `hsl(${(index * 43 + 28) % 360} 92% 70%)`,
   x: `${(index % 2 === 0 ? -1 : 1) * (60 + ((index * 29) % 520))}px`,
   xEnd: `${(index % 2 === 0 ? -1 : 1) * (110 + ((index * 37) % 700))}px`,
   lift: `${300 + ((index * 31) % 340)}px`,
@@ -21,6 +22,7 @@ const CONFETTI_PIECES = Array.from({ length: 52 }, (_, index) => ({
   rotate: `${140 + ((index * 47) % 260)}deg`,
   rotateEnd: `${220 + ((index * 61) % 320)}deg`,
   radius: index % 5 === 0 ? "999px" : index % 3 === 0 ? "2px" : "1px",
+  shape: index % 6 === 0 ? "star" : index % 4 === 0 ? "diamond" : "streamer",
 }));
 
 export default function ResultModal({
@@ -79,8 +81,10 @@ export default function ResultModal({
               <span
                 key={piece.id}
                 className="confetti-piece"
+                data-shape={piece.shape}
                 style={{
                   "--confetti-color": piece.color,
+                  "--confetti-color-end": piece.colorEnd,
                   "--confetti-delay": piece.delay,
                   "--confetti-duration": piece.duration,
                   "--confetti-fall": piece.fall,
@@ -102,6 +106,9 @@ export default function ResultModal({
             <span className="modal-tag">{copy.tag(boardNumber)}</span>
             <h2 id="result-title">{isWin ? copy.winTitle : copy.lossTitle}</h2>
           </div>
+          <button className="icon-close" type="button" onClick={onClose}>
+            {copy.close}
+          </button>
         </div>
 
         <div className="modal-body">
@@ -115,13 +122,11 @@ export default function ResultModal({
 
           <p>{isWin ? copy.winBody(guessCount) : copy.lossBody}</p>
 
-          <div className="modal-actions">
-            <button className="primary-button" type="button" onClick={onClose}>
-              {copy.close}
-            </button>
-          </div>
-
-          {shareText ? <pre className="result-share-block">{shareText}</pre> : null}
+          {shareText ? (
+            <div className="result-share-card">
+              <pre className="result-share-block">{shareText}</pre>
+            </div>
+          ) : null}
         </div>
       </section>
     </div>
