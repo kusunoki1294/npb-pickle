@@ -476,10 +476,14 @@ export default function NPBPickleGame() {
         resetAuthForm("login");
         setAuthMode(null);
       } else {
+        const emailRedirectTo =
+          typeof window !== "undefined" ? window.location.origin : undefined;
+
         const { data, error } = await supabase.auth.signUp({
           email: activeForm.email,
           password: activeForm.password,
           options: {
+            emailRedirectTo,
             data: {
               display_name: activeForm.name,
             },
