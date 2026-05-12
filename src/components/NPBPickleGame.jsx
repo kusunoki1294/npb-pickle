@@ -829,10 +829,12 @@ export default function NPBPickleGame() {
             <SearchBar
               boardDate={dateKey}
               copy={copy.search}
+              guesses={guessedPlayers}
               players={players}
               guessedIds={guessedIds}
               disabled={isGameOver}
               locale={locale}
+              mysteryPlayer={mysteryPlayer}
               notice={notice}
               onGuess={handleGuess}
               setNotice={setNotice}

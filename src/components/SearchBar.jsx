@@ -8,6 +8,7 @@ import {
   getLocalizedTeamName,
   getPlayerDisplay,
 } from "@/src/i18n/uiCopy";
+import { compareGuess } from "@/src/utils/compareGuess";
 
 function normalizeSearchValue(value) {
   return value
@@ -25,13 +26,110 @@ function matchesPlayer(player, normalizedQuery) {
   );
 }
 
+function getKnownSuggestionFacts(guesses, mysteryPlayer, boardDate) {
+  if (!mysteryPlayer || guesses.length === 0) {
+    return {
+      team: null,
+      bats: false,
+      throws: false,
+      height: false,
+      age: false,
+      position: false,
+    };
+  }
+
+  return guesses.reduce(
+    (facts, guess) => {
+      const comparison = compareGuess(guess, mysteryPlayer, boardDate);
+
+      if (comparison.team.status === "exact") {
+        facts.team = "exact";
+      } else if (comparison.team.status === "close" && facts.team !== "exact") {
+        facts.team = "close";
+      }
+
+      if (comparison.bats.status === "exact") {
+        facts.bats = true;
+      }
+
+      if (comparison.throws.status === "exact") {
+        facts.throws = true;
+      }
+
+      if (comparison.height.status === "exact") {
+        facts.height = true;
+      }
+
+      if (comparison.age.status === "exact") {
+        facts.age = true;
+      }
+
+      if (comparison.position.status === "exact") {
+        facts.position = true;
+      }
+
+      return facts;
+    },
+    {
+      team: null,
+      bats: false,
+      throws: false,
+      height: false,
+      age: false,
+      position: false,
+    },
+  );
+}
+
+function getSuggestionStatuses(player, knownFacts, mysteryPlayer, boardDate) {
+  if (!mysteryPlayer) {
+    return {};
+  }
+
+  const comparison = compareGuess(player, mysteryPlayer, boardDate);
+  const playerAge = calculateAge(player.birthDate, boardDate);
+  const mysteryAge = calculateAge(mysteryPlayer.birthDate, boardDate);
+
+  return {
+    team:
+      knownFacts.team === "exact"
+        ? comparison.team.status === "exact"
+          ? "exact"
+          : "miss"
+        : knownFacts.team === "close"
+          ? comparison.team.status === "exact" || comparison.team.status === "close"
+            ? "close"
+            : "miss"
+          : "",
+    bats: knownFacts.bats ? (comparison.bats.status === "exact" ? "exact" : "miss") : "",
+    throws: knownFacts.throws
+      ? comparison.throws.status === "exact"
+        ? "exact"
+        : "miss"
+      : "",
+    height: knownFacts.height
+      ? comparison.height.status === "exact"
+        ? "exact"
+        : "miss"
+      : "",
+    age: knownFacts.age ? (playerAge === mysteryAge ? "exact" : "miss") : "",
+    position: knownFacts.position
+      ? comparison.position.status === "exact"
+        ? "exact"
+        : "miss"
+      : "",
+  };
+}
+
 export default function SearchBar({
   boardDate,
   copy,
   players,
+  guesses,
   guessedIds,
   disabled,
   locale,
+  mysteryPlayer,
   notice,
   onGuess,
   setNotice,
@@ -54,6 +152,10 @@ export default function SearchBar({
   const availableMatches = useMemo(
     () => allMatches.filter((player) => !guessedIds.has(player.id)).slice(0, 8),
     [allMatches, guessedIds],
+  );
+  const knownFacts = useMemo(
+    () => getKnownSuggestionFacts(guesses, mysteryPlayer, boardDate),
+    [boardDate, guesses, mysteryPlayer],
   );
 
   const helperMessage = useMemo(() => {
@@ -251,6 +353,12 @@ export default function SearchBar({
           <ul className="suggestion-list">
             {availableMatches.map((player) => {
               const { primary, secondary } = getPlayerDisplay(player, locale);
+              const statuses = getSuggestionStatuses(
+                player,
+                knownFacts,
+                mysteryPlayer,
+                boardDate,
+              );
 
               return (
                 <li key={player.id}>
@@ -265,19 +373,34 @@ export default function SearchBar({
                       {secondary ? <span className="suggestion-alt">{secondary}</span> : null}
                     </div>
                     <div className="suggestion-stats">
-                      <span className="suggestion-stat">
+                      <span className={`suggestion-stat${statuses.team ? ` ${statuses.team}` : ""}`}>
                         {getLocalizedTeamName(player.teamShort, locale)}
                       </span>
-                      <span className="suggestion-stat">
+                      <span className={`suggestion-stat${statuses.bats ? ` ${statuses.bats}` : ""}`}>
                         {getLocalizedHandednessLabel(player.bats, locale)}
-                        /
+                      </span>
+                      <span
+                        className={`suggestion-stat${
+                          statuses.throws ? ` ${statuses.throws}` : ""
+                        }`}
+                      >
                         {getLocalizedHandednessLabel(player.throws, locale)}
                       </span>
-                      <span className="suggestion-stat">{player.heightCm} cm</span>
-                      <span className="suggestion-stat">
+                      <span
+                        className={`suggestion-stat${
+                          statuses.height ? ` ${statuses.height}` : ""
+                        }`}
+                      >
+                        {player.heightCm} cm
+                      </span>
+                      <span className={`suggestion-stat${statuses.age ? ` ${statuses.age}` : ""}`}>
                         {calculateAge(player.birthDate, boardDate)}
                       </span>
-                      <span className="suggestion-stat">
+                      <span
+                        className={`suggestion-stat${
+                          statuses.position ? ` ${statuses.position}` : ""
+                        }`}
+                      >
                         {getLocalizedPositionName(player.primaryPosition, locale)}
                       </span>
                     </div>

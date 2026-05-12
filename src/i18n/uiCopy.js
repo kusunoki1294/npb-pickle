@@ -63,6 +63,22 @@ const POSITION_LABELS = {
   },
 };
 
+const POSITION_FAMILY_LABELS = {
+  en: {
+    INF: "1B/2B/3B/SS",
+    OF: "LF/CF/RF",
+  },
+  ja: {
+    INF: "一/二/三/遊",
+    OF: "左/中/右",
+  },
+};
+
+const POSITION_FAMILY_MEMBERS = {
+  INF: ["1B", "2B", "3B", "SS"],
+  OF: ["LF", "CF", "RF"],
+};
+
 export function getLocalizedTeamName(name, locale = "en") {
   return TEAM_NAME_BY_LOCALE[locale]?.[name] ?? name;
 }
@@ -75,8 +91,30 @@ export function getLocalizedHandednessLabel(value, locale = "en") {
   return HANDEDNESS_LABELS[locale]?.[value] ?? value;
 }
 
+export function isBroadPosition(position) {
+  return position === "INF" || position === "OF";
+}
+
+export function expandComparablePositions(positions = []) {
+  return [...new Set(
+    positions.flatMap((position) => POSITION_FAMILY_MEMBERS[position] ?? [position]),
+  )];
+}
+
 export function getLocalizedPositionName(position, locale = "en") {
+  if (isBroadPosition(position)) {
+    return POSITION_FAMILY_LABELS[locale]?.[position] ?? position;
+  }
+
   return POSITION_LABELS[locale]?.[position] ?? position;
+}
+
+export function getLocalizedPositionList(positions = [], locale = "en") {
+  const uniquePositions = [...new Set(positions)];
+  const specificPositions = uniquePositions.filter((position) => !isBroadPosition(position));
+  const displayPositions = specificPositions.length > 0 ? specificPositions : uniquePositions;
+
+  return displayPositions.map((position) => getLocalizedPositionName(position, locale));
 }
 
 export function getPlayerDisplay(player, locale = "en") {

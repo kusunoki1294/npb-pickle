@@ -1,8 +1,10 @@
 import calculateAge from "@/src/utils/calculateAge";
 import {
+  expandComparablePositions,
   getLocalizedHandednessLabel,
   getLocalizedPositionName,
   getLocalizedTeamName,
+  isBroadPosition,
 } from "@/src/i18n/uiCopy";
 
 function getHintCopy(locale) {
@@ -69,16 +71,22 @@ function getHeightHint(guessHeight, targetHeight, locale) {
 
 function getPositionHint(guess, mysteryPlayer, locale) {
   const copy = getHintCopy(locale);
+  const guessComparablePositions = expandComparablePositions(guess.positions);
+  const mysteryComparablePositions = expandComparablePositions(mysteryPlayer.positions);
+  const hasComparablePositionMatch = guessComparablePositions.some((position) =>
+    mysteryComparablePositions.includes(position),
+  );
+  const isExactSolvedPlayer = guess.id === mysteryPlayer.id;
 
-  if (guess.primaryPosition === mysteryPlayer.primaryPosition) {
+  if (
+    isExactSolvedPlayer ||
+    (guess.primaryPosition === mysteryPlayer.primaryPosition &&
+      !isBroadPosition(guess.primaryPosition))
+  ) {
     return copy.primaryPositionMatch;
   }
 
-  if (
-    guess.positions.includes(mysteryPlayer.primaryPosition) ||
-    mysteryPlayer.positions.includes(guess.primaryPosition) ||
-    guess.positions.some((position) => mysteryPlayer.positions.includes(position))
-  ) {
+  if (hasComparablePositionMatch) {
     return copy.alternatePositionMatch;
   }
 
@@ -91,10 +99,16 @@ export function compareGuess(guess, mysteryPlayer, boardDate, locale = "en") {
   const mysteryAge = calculateAge(mysteryPlayer.birthDate, boardDate);
   const ageDifference = Math.abs(guessAge - mysteryAge);
   const heightDifference = Math.abs(guess.heightCm - mysteryPlayer.heightCm);
-  const hasAlternatePositionMatch =
-    guess.positions.includes(mysteryPlayer.primaryPosition) ||
-    mysteryPlayer.positions.includes(guess.primaryPosition) ||
-    guess.positions.some((position) => mysteryPlayer.positions.includes(position));
+  const guessComparablePositions = expandComparablePositions(guess.positions);
+  const mysteryComparablePositions = expandComparablePositions(mysteryPlayer.positions);
+  const hasComparablePositionMatch = guessComparablePositions.some((position) =>
+    mysteryComparablePositions.includes(position),
+  );
+  const isExactSolvedPlayer = guess.id === mysteryPlayer.id;
+  const hasExactPrimaryPositionMatch =
+    isExactSolvedPlayer ||
+    (guess.primaryPosition === mysteryPlayer.primaryPosition &&
+      !isBroadPosition(guess.primaryPosition));
 
   return {
     team: {
@@ -136,9 +150,9 @@ export function compareGuess(guess, mysteryPlayer, boardDate, locale = "en") {
     position: {
       value: getLocalizedPositionName(guess.primaryPosition, locale),
       status:
-        guess.primaryPosition === mysteryPlayer.primaryPosition
+        hasExactPrimaryPositionMatch
           ? "exact"
-          : hasAlternatePositionMatch
+          : hasComparablePositionMatch
             ? "close"
             : "miss",
       hint: getPositionHint(guess, mysteryPlayer, locale),

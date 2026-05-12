@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import {
   getLocalizedLeagueName,
-  getLocalizedPositionName,
+  getLocalizedPositionList,
   getLocalizedTeamName,
   getPlayerDisplay,
 } from "@/src/i18n/uiCopy";
@@ -62,9 +62,7 @@ export default function ResultModal({
   const { primary, secondary } = getPlayerDisplay(mysteryPlayer, locale);
   const teamLabel = getLocalizedTeamName(mysteryPlayer.team, locale);
   const leagueLabel = getLocalizedLeagueName(mysteryPlayer.league, locale);
-  const positionLabel = mysteryPlayer.positions
-    .map((position) => getLocalizedPositionName(position, locale))
-    .join(" / ");
+  const positionLabel = getLocalizedPositionList(mysteryPlayer.positions, locale).join(" / ");
 
   return (
     <div className="modal-backdrop" onClick={onClose}>

@@ -553,6 +553,24 @@ p {
   background: #f6f5f1;
 }
 
+.suggestion-stat.exact {
+  background: var(--exact);
+  border-color: var(--exact-border);
+  color: var(--text);
+}
+
+.suggestion-stat.close {
+  background: var(--close);
+  border-color: var(--close-border);
+  color: var(--text);
+}
+
+.suggestion-stat.miss {
+  background: var(--miss);
+  border-color: var(--miss-border);
+  color: var(--muted);
+}
+
 .mini-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
