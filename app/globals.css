@@ -761,6 +761,67 @@ p {
   box-shadow: 0 18px 40px rgba(14, 25, 16, 0.12);
 }
 
+.result-modal-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.confetti-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  left: calc(50% - (var(--confetti-size) / 2));
+  bottom: 112px;
+  width: var(--confetti-size);
+  height: calc(var(--confetti-size) * 1.55);
+  border-radius: var(--confetti-radius);
+  background: var(--confetti-color);
+  opacity: 0;
+  transform: translate3d(0, 0, 0) rotate(0deg);
+  animation: confetti-burst var(--confetti-duration) ease-out var(--confetti-delay)
+    forwards;
+}
+
+.confetti-piece:nth-child(4n) {
+  height: var(--confetti-size);
+}
+
+.confetti-piece:nth-child(3n) {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.38) inset;
+}
+
+@keyframes confetti-burst {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(0.75);
+  }
+
+  8% {
+    opacity: 1;
+  }
+
+  55% {
+    opacity: 1;
+    transform: translate3d(var(--confetti-x), calc(var(--confetti-lift) * -1), 0)
+      rotate(var(--confetti-rotate)) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(
+        var(--confetti-x-end),
+        calc(var(--confetti-fall) - var(--confetti-lift)),
+        0
+      )
+      rotate(var(--confetti-rotate-end)) scale(0.92);
+  }
+}
+
 .modal-wide {
   width: min(760px, 100%);
 }

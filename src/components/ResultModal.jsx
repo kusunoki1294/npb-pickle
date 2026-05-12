@@ -7,6 +7,21 @@ import {
   getPlayerDisplay,
 } from "@/src/i18n/uiCopy";
 
+const CONFETTI_PIECES = Array.from({ length: 26 }, (_, index) => ({
+  id: index,
+  color: `hsl(${(index * 43) % 360} 80% 58%)`,
+  x: `${(index % 2 === 0 ? -1 : 1) * (20 + ((index * 17) % 210))}px`,
+  xEnd: `${(index % 2 === 0 ? -1 : 1) * (34 + ((index * 21) % 248))}px`,
+  lift: `${170 + ((index * 29) % 170)}px`,
+  fall: `${68 + ((index * 19) % 40)}px`,
+  size: `${8 + ((index * 7) % 8)}px`,
+  delay: `${((index * 13) % 18) / 100}s`,
+  duration: `${1.85 + ((index * 11) % 50) / 100}s`,
+  rotate: `${140 + ((index * 47) % 260)}deg`,
+  rotateEnd: `${220 + ((index * 61) % 320)}deg`,
+  radius: index % 5 === 0 ? "999px" : index % 3 === 0 ? "2px" : "1px",
+}));
+
 export default function ResultModal({
   boardNumber,
   copy,
@@ -49,20 +64,41 @@ export default function ResultModal({
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <section
-        className="modal-card"
+        className={`modal-card result-modal-card${isWin ? " result-modal-card-win" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="result-title"
         onClick={(event) => event.stopPropagation()}
       >
+        {isWin ? (
+          <div className="confetti-layer" aria-hidden="true">
+            {CONFETTI_PIECES.map((piece) => (
+              <span
+                key={piece.id}
+                className="confetti-piece"
+                style={{
+                  "--confetti-color": piece.color,
+                  "--confetti-delay": piece.delay,
+                  "--confetti-duration": piece.duration,
+                  "--confetti-fall": piece.fall,
+                  "--confetti-lift": piece.lift,
+                  "--confetti-radius": piece.radius,
+                  "--confetti-rotate": piece.rotate,
+                  "--confetti-rotate-end": piece.rotateEnd,
+                  "--confetti-size": piece.size,
+                  "--confetti-x": piece.x,
+                  "--confetti-x-end": piece.xEnd,
+                }}
+              />
+            ))}
+          </div>
+        ) : null}
+
         <div className="modal-header">
           <div>
             <span className="modal-tag">{copy.tag(boardNumber)}</span>
             <h2 id="result-title">{isWin ? copy.winTitle : copy.lossTitle}</h2>
           </div>
-          <button className="icon-close" type="button" onClick={onClose}>
-            {copy.close}
-          </button>
         </div>
 
         <div className="modal-body">
