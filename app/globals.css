@@ -69,7 +69,10 @@ p {
 
 .page-tools {
   display: flex;
-  justify-content: flex-start;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .loading-state,
@@ -158,6 +161,40 @@ p {
 .locale-switch {
   display: flex;
   gap: 8px;
+}
+
+.account-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.account-badge {
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel-soft);
+}
+
+.account-badge span {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.account-badge strong {
+  display: block;
+  margin-top: 4px;
+}
+
+.account-button {
+  white-space: nowrap;
 }
 
 .locale-tab,
@@ -623,6 +660,59 @@ p {
   text-decoration: underline;
 }
 
+.auth-modal-card {
+  width: min(520px, 100%);
+}
+
+.auth-description {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.auth-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.auth-field {
+  display: grid;
+  gap: 8px;
+}
+
+.auth-field span {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.auth-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel-soft);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.auth-input::placeholder {
+  color: #7a847d;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #ffffff;
+}
+
+.auth-notice {
+  margin: 0;
+  color: #8a402f;
+  line-height: 1.5;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -770,6 +860,7 @@ p {
 }
 
 @media (max-width: 860px) {
+  .page-tools,
   .topbar-card,
   .topbar-controls,
   .control-head,
@@ -781,6 +872,12 @@ p {
 
   .topbar-side {
     align-items: stretch;
+  }
+
+  .account-actions {
+    width: 100%;
+    justify-content: flex-start;
+    margin-left: 0;
   }
 
   .mini-stats,
@@ -823,6 +920,10 @@ p {
   .legend-grid,
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .account-actions > * {
+    width: 100%;
   }
 
   .board-grid {

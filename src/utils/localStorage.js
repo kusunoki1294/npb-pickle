@@ -1,7 +1,8 @@
 const GAME_PREFIX = "npb-pickle:game:";
 const HOW_TO_PLAY_KEY = "npb-pickle:how-to-play-seen:v2";
 const LOCALE_KEY = "npb-pickle:locale:v1";
-const STATS_KEY = "npb-pickle:stats:v2";
+const LEGACY_STATS_KEY = "npb-pickle:stats:v2";
+const STATS_PREFIX = "npb-pickle:stats:v3:";
 
 function canUseStorage() {
   return typeof window !== "undefined" && Boolean(window.localStorage);
@@ -17,6 +18,26 @@ function safeParse(rawValue) {
   } catch {
     return null;
   }
+}
+
+function getStorageScope(userId) {
+  return userId ?? "guest";
+}
+
+function getDailyGameKey(dateKey, userId) {
+  return `${GAME_PREFIX}${dateKey}:${getStorageScope(userId)}`;
+}
+
+function getLegacyDailyGameKey(dateKey) {
+  return `${GAME_PREFIX}${dateKey}`;
+}
+
+function getStatsKey(userId) {
+  return `${STATS_PREFIX}${getStorageScope(userId)}`;
+}
+
+function readStoredJson(key) {
+  return safeParse(window.localStorage.getItem(key));
 }
 
 function createEmptyGuessDistribution() {
@@ -100,28 +121,54 @@ export function createInitialGameState({ dateKey, boardNumber, mysteryPlayerId }
   };
 }
 
-export function loadDailyGame(dateKey) {
+export function loadDailyGame(dateKey, userId = null) {
   if (!canUseStorage()) {
     return null;
   }
 
-  return safeParse(window.localStorage.getItem(`${GAME_PREFIX}${dateKey}`));
+  const scopedGame = readStoredJson(getDailyGameKey(dateKey, userId));
+
+  if (scopedGame) {
+    return scopedGame;
+  }
+
+  if (userId) {
+    return null;
+  }
+
+  const legacyGuestGame = readStoredJson(getLegacyDailyGameKey(dateKey));
+
+  if (legacyGuestGame) {
+    window.localStorage.setItem(
+      getDailyGameKey(dateKey, null),
+      JSON.stringify(legacyGuestGame),
+    );
+  }
+
+  return legacyGuestGame;
 }
 
-export function saveDailyGame(dateKey, gameState) {
+export function saveDailyGame(dateKey, gameState, userId = null) {
   if (!canUseStorage()) {
     return;
   }
 
-  window.localStorage.setItem(`${GAME_PREFIX}${dateKey}`, JSON.stringify(gameState));
+  window.localStorage.setItem(
+    getDailyGameKey(dateKey, userId),
+    JSON.stringify(gameState),
+  );
 }
 
-export function clearDailyGame(dateKey) {
+export function clearDailyGame(dateKey, userId = null) {
   if (!canUseStorage()) {
     return;
   }
 
-  window.localStorage.removeItem(`${GAME_PREFIX}${dateKey}`);
+  window.localStorage.removeItem(getDailyGameKey(dateKey, userId));
+
+  if (!userId) {
+    window.localStorage.removeItem(getLegacyDailyGameKey(dateKey));
+  }
 }
 
 export function hasSeenHowToPlay() {
@@ -156,45 +203,68 @@ export function saveLocale(locale) {
   window.localStorage.setItem(LOCALE_KEY, locale === "ja" ? "ja" : "en");
 }
 
-export function loadStats() {
+export function loadStats(userId = null) {
   if (!canUseStorage()) {
     return buildStatsFromHistory({});
   }
 
-  const parsed = safeParse(window.localStorage.getItem(STATS_KEY));
-  const history = parsed?.history && typeof parsed.history === "object" ? parsed.history : {};
+  const scopedStats = readStoredJson(getStatsKey(userId));
+  const scopedHistory =
+    scopedStats?.history && typeof scopedStats.history === "object"
+      ? scopedStats.history
+      : {};
 
-  return buildStatsFromHistory(history);
+  if (Object.keys(scopedHistory).length > 0 || userId) {
+    return buildStatsFromHistory(scopedHistory);
+  }
+
+  const legacyStats = readStoredJson(LEGACY_STATS_KEY);
+  const legacyHistory =
+    legacyStats?.history && typeof legacyStats.history === "object"
+      ? legacyStats.history
+      : {};
+
+  if (Object.keys(legacyHistory).length > 0) {
+    window.localStorage.setItem(
+      getStatsKey(null),
+      JSON.stringify({ history: legacyHistory }),
+    );
+  }
+
+  return buildStatsFromHistory(legacyHistory);
 }
 
-function saveStatsHistory(history) {
+function saveStatsHistory(history, userId = null) {
   if (!canUseStorage()) {
     return buildStatsFromHistory(history);
   }
 
   const nextStats = buildStatsFromHistory(history);
-  window.localStorage.setItem(STATS_KEY, JSON.stringify({ history }));
+  window.localStorage.setItem(getStatsKey(userId), JSON.stringify({ history }));
   return nextStats;
 }
 
-export function recordCompletedGame({ dateKey, status, guessCount }) {
-  const currentStats = loadStats();
+export function recordCompletedGame({ dateKey, status, guessCount }, userId = null) {
+  const currentStats = loadStats(userId);
 
   if (currentStats.history[dateKey]) {
     return currentStats;
   }
 
-  return saveStatsHistory({
-    ...currentStats.history,
-    [dateKey]: {
-      status,
-      guessCount,
+  return saveStatsHistory(
+    {
+      ...currentStats.history,
+      [dateKey]: {
+        status,
+        guessCount,
+      },
     },
-  });
+    userId,
+  );
 }
 
-export function removeGameFromStats(dateKey) {
-  const currentStats = loadStats();
+export function removeGameFromStats(dateKey, userId = null) {
+  const currentStats = loadStats(userId);
 
   if (!currentStats.history[dateKey]) {
     return currentStats;
@@ -203,5 +273,66 @@ export function removeGameFromStats(dateKey) {
   const nextHistory = { ...currentStats.history };
   delete nextHistory[dateKey];
 
-  return saveStatsHistory(nextHistory);
+  return saveStatsHistory(nextHistory, userId);
+}
+
+function listGuestDateKeys() {
+  if (!canUseStorage()) {
+    return [];
+  }
+
+  const guestSuffix = ":guest";
+  const dateKeys = new Set();
+
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index);
+
+    if (!key?.startsWith(GAME_PREFIX)) {
+      continue;
+    }
+
+    const remainder = key.slice(GAME_PREFIX.length);
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(remainder)) {
+      dateKeys.add(remainder);
+      continue;
+    }
+
+    if (remainder.endsWith(guestSuffix)) {
+      const dateKey = remainder.slice(0, -guestSuffix.length);
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+        dateKeys.add(dateKey);
+      }
+    }
+  }
+
+  return [...dateKeys];
+}
+
+export function migrateGuestDataToUser(userId) {
+  if (!canUseStorage() || !userId) {
+    return;
+  }
+
+  const guestStats = loadStats();
+  const userStats = loadStats(userId);
+  const mergedHistory = {
+    ...guestStats.history,
+    ...userStats.history,
+  };
+
+  if (JSON.stringify(mergedHistory) !== JSON.stringify(userStats.history)) {
+    saveStatsHistory(mergedHistory, userId);
+  }
+
+  for (const dateKey of listGuestDateKeys()) {
+    const guestGame = loadDailyGame(dateKey);
+
+    if (!guestGame || loadDailyGame(dateKey, userId)) {
+      continue;
+    }
+
+    saveDailyGame(dateKey, guestGame, userId);
+  }
 }

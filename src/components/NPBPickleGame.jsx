@@ -6,8 +6,9 @@ import HowToPlayModal from "@/src/components/HowToPlayModal";
 import ResultModal from "@/src/components/ResultModal";
 import SearchBar from "@/src/components/SearchBar";
 import StatsModal from "@/src/components/StatsModal";
-import { UI_COPY, getPlayerDisplay } from "@/src/i18n/uiCopy";
 import players from "@/src/data/players";
+import { UI_COPY, getPlayerDisplay } from "@/src/i18n/uiCopy";
+import { hasSupabaseConfig, supabase } from "@/src/lib/supabase";
 import {
   createInitialGameState,
   hasSeenHowToPlay,
@@ -15,9 +16,10 @@ import {
   loadLocale,
   loadStats,
   markHowToPlaySeen,
+  migrateGuestDataToUser,
   recordCompletedGame,
-  saveLocale,
   saveDailyGame,
+  saveLocale,
 } from "@/src/utils/localStorage";
 import { getDailyPlayer, getDateKey } from "@/src/utils/getDailyPlayer";
 import { buildShareResults } from "@/src/utils/shareResults";
@@ -31,6 +33,134 @@ const OTHER_GAME_URLS = {
   en: "https://npb-grid.vercel.app/?lang=en",
   ja: "https://npb-grid.vercel.app/",
 };
+const INITIAL_AUTH_FORMS = {
+  login: {
+    email: "",
+    password: "",
+  },
+  signup: {
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  },
+};
+
+function AuthModal({
+  copy,
+  form,
+  loading,
+  mode,
+  notice,
+  onChange,
+  onClose,
+  onSubmit,
+  onSwitchMode,
+}) {
+  if (!mode || !form) {
+    return null;
+  }
+
+  const isSignup = mode === "signup";
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <section
+        className="modal-card auth-modal-card"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="modal-header">
+          <div>
+            <span className="modal-tag">{isSignup ? copy.signIn : copy.logIn}</span>
+            <h2>{isSignup ? copy.authSignupHeading : copy.authLoginHeading}</h2>
+            <p className="auth-description">
+              {isSignup ? copy.authSignupBlurb : copy.authLoginBlurb}
+            </p>
+          </div>
+
+          <button className="icon-close" type="button" onClick={onClose}>
+            {copy.authClose}
+          </button>
+        </div>
+
+        <form className="auth-form" onSubmit={onSubmit}>
+          {isSignup ? (
+            <label className="auth-field">
+              <span>{copy.authName}</span>
+              <input
+                autoFocus
+                autoComplete="nickname"
+                className="auth-input"
+                onChange={(event) => onChange("name", event.target.value)}
+                placeholder={copy.authNamePlaceholder}
+                type="text"
+                value={form.name}
+              />
+            </label>
+          ) : null}
+
+          <label className="auth-field">
+            <span>{copy.authEmail}</span>
+            <input
+              autoComplete="email"
+              autoFocus={!isSignup}
+              className="auth-input"
+              onChange={(event) => onChange("email", event.target.value)}
+              placeholder={copy.authEmailPlaceholder}
+              type="email"
+              value={form.email}
+            />
+          </label>
+
+          <label className="auth-field">
+            <span>{copy.authPassword}</span>
+            <input
+              autoComplete={isSignup ? "new-password" : "current-password"}
+              className="auth-input"
+              onChange={(event) => onChange("password", event.target.value)}
+              placeholder={copy.authPasswordPlaceholder}
+              type="password"
+              value={form.password}
+            />
+          </label>
+
+          {isSignup ? (
+            <label className="auth-field">
+              <span>{copy.authConfirmPassword}</span>
+              <input
+                autoComplete="new-password"
+                className="auth-input"
+                onChange={(event) => onChange("confirmPassword", event.target.value)}
+                placeholder={copy.authConfirmPasswordPlaceholder}
+                type="password"
+                value={form.confirmPassword}
+              />
+            </label>
+          ) : null}
+
+          {notice ? <p className="auth-notice">{notice}</p> : null}
+
+          <div className="modal-actions">
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => onSwitchMode(isSignup ? "login" : "signup")}
+            >
+              {isSignup ? copy.authSwitchToLogin : copy.authSwitchToSignup}
+            </button>
+            <button className="primary-button" type="submit" disabled={loading}>
+              {loading
+                ? copy.authWorking
+                : isSignup
+                  ? copy.authSignupSubmit
+                  : copy.authLoginSubmit}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  );
+}
 
 function sanitizeGameState(savedState, mysteryPlayerId, boardNumber, playerMap) {
   const guessIds = Array.isArray(savedState?.guessIds)
@@ -59,13 +189,19 @@ export default function NPBPickleGame() {
   const [gameState, setGameState] = useState(null);
   const [hasLoadedLocale, setHasLoadedLocale] = useState(false);
   const [locale, setLocale] = useState("en");
-  const [stats, setStats] = useState(loadStats());
+  const [stats, setStats] = useState(() => loadStats());
   const [notice, setNotice] = useState("");
   const [shareMessage, setShareMessage] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isResultOpen, setIsResultOpen] = useState(false);
+  const [authMode, setAuthMode] = useState(null);
+  const [authNotice, setAuthNotice] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authSession, setAuthSession] = useState(null);
+  const [authReady, setAuthReady] = useState(!supabase);
+  const [authForms, setAuthForms] = useState(INITIAL_AUTH_FORMS);
 
   const playerMap = useMemo(
     () => new Map(players.map((player) => [player.id, player])),
@@ -73,6 +209,10 @@ export default function NPBPickleGame() {
   );
   const copy = UI_COPY[locale];
   const otherGameUrl = OTHER_GAME_URLS[locale] ?? OTHER_GAME_URLS.en;
+  const activeUser = authSession?.user ?? null;
+  const activeUserId = activeUser?.id ?? null;
+  const activeAccountLabel =
+    activeUser?.user_metadata?.display_name || activeUser?.email || "";
 
   useEffect(() => {
     setLocale(loadLocale());
@@ -90,13 +230,70 @@ export default function NPBPickleGame() {
   }, [hasLoadedLocale, locale]);
 
   useEffect(() => {
+    if (!supabase) {
+      return undefined;
+    }
+
+    let isMounted = true;
+
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setAuthSession(data.session ?? null);
+        setAuthReady(true);
+      })
+      .catch(() => {
+        if (!isMounted) {
+          return;
+        }
+
+        setAuthSession(null);
+        setAuthReady(true);
+      });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_, session) => {
+      if (!isMounted) {
+        return;
+      }
+
+      setAuthSession(session ?? null);
+      setAuthReady(true);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!activeUserId || (hasSupabaseConfig && !authReady)) {
+      return;
+    }
+
+    migrateGuestDataToUser(activeUserId);
+  }, [activeUserId, authReady]);
+
+  useEffect(() => {
+    if (hasSupabaseConfig && !authReady) {
+      return;
+    }
+
     const todayKey = getDateKey();
     const dailySelection = getDailyPlayer(players, todayKey);
-    const savedGame = loadDailyGame(todayKey);
+    const savedGame = loadDailyGame(todayKey, activeUserId);
 
     setDateKey(todayKey);
     setBoardNumber(dailySelection.boardNumber);
-    setStats(loadStats());
+    setStats(loadStats(activeUserId));
+    setNotice("");
+    setShareMessage("");
 
     if (!hasSeenHowToPlay()) {
       setIsHowToPlayOpen(true);
@@ -122,26 +319,30 @@ export default function NPBPickleGame() {
         mysteryPlayerId: dailySelection.player.id,
       }),
     );
-  }, [playerMap]);
+    setIsResultOpen(false);
+  }, [activeUserId, authReady, playerMap]);
 
   useEffect(() => {
     if (!gameState || !dateKey) {
       return;
     }
 
-    saveDailyGame(dateKey, gameState);
-  }, [dateKey, gameState]);
+    saveDailyGame(dateKey, gameState, activeUserId);
+  }, [activeUserId, dateKey, gameState]);
 
   useEffect(() => {
     if (!gameState || gameState.status === "playing" || gameState.statsRecorded) {
       return;
     }
 
-    const nextStats = recordCompletedGame({
-      dateKey: gameState.dateKey,
-      status: gameState.status,
-      guessCount: gameState.guessIds.length,
-    });
+    const nextStats = recordCompletedGame(
+      {
+        dateKey: gameState.dateKey,
+        status: gameState.status,
+        guessCount: gameState.guessIds.length,
+      },
+      activeUserId,
+    );
 
     setStats(nextStats);
     setGameState((currentState) =>
@@ -153,7 +354,7 @@ export default function NPBPickleGame() {
         : currentState,
     );
     setIsResultOpen(true);
-  }, [gameState]);
+  }, [activeUserId, gameState]);
 
   useEffect(() => {
     if (!isMenuOpen) {
@@ -217,6 +418,116 @@ export default function NPBPickleGame() {
       : copy.noGuesses
     : copy.guessesRemaining(remainingGuesses);
 
+  function handleAuthFieldChange(field, value) {
+    if (!authMode) {
+      return;
+    }
+
+    setAuthNotice("");
+    setAuthForms((currentForms) => ({
+      ...currentForms,
+      [authMode]: {
+        ...currentForms[authMode],
+        [field]: value,
+      },
+    }));
+  }
+
+  function resetAuthForm(mode) {
+    setAuthForms((currentForms) => ({
+      ...currentForms,
+      [mode]: INITIAL_AUTH_FORMS[mode],
+    }));
+  }
+
+  async function handleAuthSubmit(event) {
+    event.preventDefault();
+
+    if (!authMode) {
+      return;
+    }
+
+    if (!hasSupabaseConfig || !supabase) {
+      setAuthNotice(copy.authConfigMissing);
+      return;
+    }
+
+    const activeForm = authForms[authMode];
+
+    if (authMode === "signup" && activeForm.password !== activeForm.confirmPassword) {
+      setAuthNotice(copy.authPasswordMismatch);
+      return;
+    }
+
+    setAuthLoading(true);
+    setAuthNotice("");
+
+    try {
+      if (authMode === "login") {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: activeForm.email,
+          password: activeForm.password,
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        resetAuthForm("login");
+        setAuthMode(null);
+      } else {
+        const { data, error } = await supabase.auth.signUp({
+          email: activeForm.email,
+          password: activeForm.password,
+          options: {
+            data: {
+              display_name: activeForm.name,
+            },
+          },
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        resetAuthForm("signup");
+        setAuthNotice(copy.authSignupSuccess);
+
+        if (data.session) {
+          setAuthMode(null);
+        }
+      }
+    } catch (error) {
+      setAuthNotice(error.message);
+      return;
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  async function handleLogout() {
+    if (!supabase) {
+      return;
+    }
+
+    await supabase.auth.signOut();
+  }
+
+  function openAuthModal(nextMode) {
+    setAuthNotice("");
+    setAuthMode(nextMode);
+  }
+
+  function closeAuthModal() {
+    setAuthNotice("");
+    setAuthMode(null);
+  }
+
+  function switchAuthMode(nextMode) {
+    setAuthNotice("");
+    setAuthMode(nextMode);
+  }
+
   function handleGuess(player) {
     if (!gameState || isGameOver) {
       return;
@@ -279,7 +590,7 @@ export default function NPBPickleGame() {
     setIsHowToPlayOpen(false);
   }
 
-  if (!gameState || !mysteryPlayer) {
+  if ((!authReady && hasSupabaseConfig) || !gameState || !mysteryPlayer) {
     return (
       <main className={`page-shell locale-${locale}`}>
         <section className="loading-state">
@@ -313,6 +624,41 @@ export default function NPBPickleGame() {
               >
                 {copy.localeTabs.en}
               </button>
+            </div>
+
+            <div className="account-actions">
+              {!authReady && hasSupabaseConfig ? (
+                <div className="account-badge">
+                  <span>{copy.authRestoring}</span>
+                </div>
+              ) : activeUser ? (
+                <>
+                  <div className="account-badge">
+                    <span>{copy.authLoggedInAs}</span>
+                    <strong>{activeAccountLabel}</strong>
+                  </div>
+                  <button className="secondary-button account-button" type="button" onClick={handleLogout}>
+                    {copy.authLogout}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className="secondary-button account-button"
+                    type="button"
+                    onClick={() => openAuthModal("login")}
+                  >
+                    {copy.logIn}
+                  </button>
+                  <button
+                    className="primary-button account-button"
+                    type="button"
+                    onClick={() => openAuthModal("signup")}
+                  >
+                    {copy.signIn}
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -479,6 +825,17 @@ export default function NPBPickleGame() {
         </section>
       </main>
 
+      <AuthModal
+        copy={copy}
+        form={authMode ? authForms[authMode] : null}
+        loading={authLoading}
+        mode={authMode}
+        notice={authNotice}
+        onChange={handleAuthFieldChange}
+        onClose={closeAuthModal}
+        onSubmit={handleAuthSubmit}
+        onSwitchMode={switchAuthMode}
+      />
       <HowToPlayModal copy={copy.howTo} isOpen={isHowToPlayOpen} onClose={closeHowToPlay} />
       <StatsModal
         copy={copy.statsModal}
