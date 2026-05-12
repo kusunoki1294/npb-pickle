@@ -6,7 +6,7 @@ import { getLocalizedTeamName, getPlayerDisplay } from "@/src/i18n/uiCopy";
 function normalizeSearchValue(value) {
   return value
     .toLowerCase()
-    .replace(/[\s'’.-]/g, "")
+    .replace(/[\s,'’.-]/g, "")
     .replace(/　/g, "");
 }
 

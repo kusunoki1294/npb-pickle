@@ -69,8 +69,9 @@ export const UI_COPY = {
     },
     loading: "Loading current board...",
     eyebrow: "NPB Player Guessing Game",
+    pageTitle: "NPB Silhouette",
     mastheadDescription:
-      "One mystery player. Nine guesses. Each row checks team, handedness, birthplace, age, and position.",
+      "One mystery player. Nine guesses. Each row checks team, handedness, height, age, and position.",
     boardDetailsAria: "Board details",
     progressSummaryAria: "Progress summary",
     boardLabel: "Board",
@@ -135,7 +136,7 @@ export const UI_COPY = {
     },
     board: {
       ariaLabel: "Guess results",
-      headers: ["Player", "Team", "B", "T", "Born", "Age", "Pos"],
+      headers: ["Player", "Team", "B", "T", "Height", "Age", "Pos"],
       guessLabel: (count) => `Guess ${count}`,
     },
     howTo: {
@@ -153,7 +154,7 @@ export const UI_COPY = {
       rules: [
         "Team: green for the same team, yellow for the same league.",
         "B/T: green for the same bats or throws hand.",
-        "Born: green for the same birthplace, yellow for the same country or region.",
+        "Height: green for the exact height, yellow if it is within 3 cm.",
         "Age: green for the exact age, yellow if it is within 2 years.",
         "Position: green for the same primary position, yellow for an alternate match.",
       ],
@@ -191,9 +192,10 @@ export const UI_COPY = {
       ja: "日本語",
     },
     loading: "現在のボードを読み込み中...",
-    eyebrow: "NPB選手当てゲーム",
+    eyebrow: "プロ野球選手当てゲーム",
+    pageTitle: "プロ野球シルエット",
     mastheadDescription:
-      "1人のミステリー選手を9回以内で当てます。各行では球団、打投、出身地、年齢、守備位置を比較します。",
+      "1人のミステリー選手を9回以内で当てます。各行では球団、打投、身長、年齢、守備位置を比較します。",
     boardDetailsAria: "ボード情報",
     progressSummaryAria: "進行状況",
     boardLabel: "ボード",
@@ -256,7 +258,7 @@ export const UI_COPY = {
     },
     board: {
       ariaLabel: "予想結果",
-      headers: ["選手", "球団", "打", "投", "出身", "年齢", "守"],
+      headers: ["選手", "球団", "打", "投", "身長", "年齢", "守"],
       guessLabel: (count) => `予想 ${count}`,
     },
     howTo: {
@@ -274,7 +276,7 @@ export const UI_COPY = {
       rules: [
         "球団: 同じ球団なら緑、同じリーグなら黄。",
         "打投: 同じ打席または利き腕なら緑。",
-        "出身地: 同じ出身地なら緑、同じ国または地域なら黄。",
+        "身長: 同じ身長なら緑、3cm差以内なら黄。",
         "年齢: 同年齢なら緑、2歳差以内なら黄。",
         "守備位置: 同じ主ポジションなら緑、サブポジション一致なら黄。",
       ],

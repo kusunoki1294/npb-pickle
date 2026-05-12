@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "data:build-active-players": "node scripts/buildActivePlayers.mjs"
   },
   "dependencies": {
     "next": "^15.0.0",

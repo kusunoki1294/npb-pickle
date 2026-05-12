@@ -28,7 +28,7 @@ export default function GuessRow({ boardDate, guess, locale, mysteryPlayer }) {
       <DataCell cell={result.team} />
       <DataCell cell={result.bats} />
       <DataCell cell={result.throws} />
-      <DataCell cell={result.birthPlace} />
+      <DataCell cell={result.height} />
       <DataCell cell={result.age} />
       <DataCell cell={result.position} />
     </div>

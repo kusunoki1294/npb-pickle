@@ -9,10 +9,9 @@ const SQUARES = {
 function getRowStatuses(result) {
   return [
     result.team.status,
-    result.league.status,
     result.bats.status,
     result.throws.status,
-    result.birthPlace.status,
+    result.height.status,
     result.age.status,
     result.position.status,
   ];

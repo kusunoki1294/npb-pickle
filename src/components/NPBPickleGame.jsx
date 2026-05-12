@@ -333,7 +333,7 @@ export default function NPBPickleGame() {
           <header className="topbar-card">
             <div className="topbar-main">
               <span className="eyebrow">{copy.eyebrow}</span>
-              <h1>NPB Pickle</h1>
+              <h1>{copy.pageTitle}</h1>
               <p className="topbar-description">{copy.mastheadDescription}</p>
             </div>
 
