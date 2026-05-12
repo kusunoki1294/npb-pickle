@@ -1,4 +1,9 @@
 import calculateAge from "@/src/utils/calculateAge";
+import {
+  getLocalizedHandednessLabel,
+  getLocalizedPositionName,
+  getLocalizedTeamName,
+} from "@/src/i18n/uiCopy";
 
 function getHintCopy(locale) {
   if (locale === "ja") {
@@ -93,7 +98,7 @@ export function compareGuess(guess, mysteryPlayer, boardDate, locale = "en") {
 
   return {
     team: {
-      value: guess.teamShort,
+      value: getLocalizedTeamName(guess.teamShort, locale),
       status:
         guess.team === mysteryPlayer.team
           ? "exact"
@@ -108,12 +113,12 @@ export function compareGuess(guess, mysteryPlayer, boardDate, locale = "en") {
             : copy.differentLeague,
     },
     bats: {
-      value: guess.bats,
+      value: getLocalizedHandednessLabel(guess.bats, locale),
       status: guess.bats === mysteryPlayer.bats ? "exact" : "miss",
       hint: guess.bats === mysteryPlayer.bats ? copy.batsMatch : copy.batsMiss,
     },
     throws: {
-      value: guess.throws,
+      value: getLocalizedHandednessLabel(guess.throws, locale),
       status: guess.throws === mysteryPlayer.throws ? "exact" : "miss",
       hint: guess.throws === mysteryPlayer.throws ? copy.throwsMatch : copy.throwsMiss,
     },
@@ -129,7 +134,7 @@ export function compareGuess(guess, mysteryPlayer, boardDate, locale = "en") {
       hint: getAgeHint(guessAge, mysteryAge, locale),
     },
     position: {
-      value: guess.primaryPosition,
+      value: getLocalizedPositionName(guess.primaryPosition, locale),
       status:
         guess.primaryPosition === mysteryPlayer.primaryPosition
           ? "exact"

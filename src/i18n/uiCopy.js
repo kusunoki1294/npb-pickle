@@ -38,12 +38,45 @@ const LEAGUE_LABELS = {
   },
 };
 
+const HANDEDNESS_LABELS = {
+  ja: {
+    L: "左",
+    R: "右",
+    S: "両",
+  },
+};
+
+const POSITION_LABELS = {
+  ja: {
+    P: "投手",
+    C: "捕手",
+    "1B": "一塁手",
+    "2B": "二塁手",
+    "3B": "三塁手",
+    SS: "遊撃手",
+    LF: "左翼手",
+    CF: "中堅手",
+    RF: "右翼手",
+    INF: "内野手",
+    OF: "外野手",
+    DH: "指名打者",
+  },
+};
+
 export function getLocalizedTeamName(name, locale = "en") {
   return TEAM_NAME_BY_LOCALE[locale]?.[name] ?? name;
 }
 
 export function getLocalizedLeagueName(league, locale = "en") {
   return LEAGUE_LABELS[locale]?.[league] ?? league;
+}
+
+export function getLocalizedHandednessLabel(value, locale = "en") {
+  return HANDEDNESS_LABELS[locale]?.[value] ?? value;
+}
+
+export function getLocalizedPositionName(position, locale = "en") {
+  return POSITION_LABELS[locale]?.[position] ?? position;
 }
 
 export function getPlayerDisplay(player, locale = "en") {

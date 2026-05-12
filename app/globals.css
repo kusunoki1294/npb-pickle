@@ -501,10 +501,8 @@ p {
 
 .suggestion-item {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  display: grid;
+  gap: 8px;
   border: 0;
   border-radius: 10px;
   background: transparent;
@@ -519,15 +517,35 @@ p {
   background: #f3f5f2;
 }
 
+.suggestion-copy {
+  min-width: 0;
+}
+
 .suggestion-name,
 .suggestion-alt {
   display: block;
 }
 
 .suggestion-alt,
-.suggestion-meta {
+.suggestion-stats {
   color: var(--muted);
   font-size: 0.84rem;
+}
+
+.suggestion-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.suggestion-stat {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #f6f5f1;
 }
 
 .mini-stats {

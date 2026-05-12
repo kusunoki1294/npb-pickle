@@ -852,6 +852,7 @@ export default function NPBPickleGame() {
             </div>
 
             <SearchBar
+              boardDate={dateKey}
               copy={copy.search}
               players={players}
               guessedIds={guessedIds}

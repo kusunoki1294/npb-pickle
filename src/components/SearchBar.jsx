@@ -1,7 +1,13 @@
 "use client";
 
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
-import { getLocalizedTeamName, getPlayerDisplay } from "@/src/i18n/uiCopy";
+import calculateAge from "@/src/utils/calculateAge";
+import {
+  getLocalizedHandednessLabel,
+  getLocalizedPositionName,
+  getLocalizedTeamName,
+  getPlayerDisplay,
+} from "@/src/i18n/uiCopy";
 
 function normalizeSearchValue(value) {
   return value
@@ -20,6 +26,7 @@ function matchesPlayer(player, normalizedQuery) {
 }
 
 export default function SearchBar({
+  boardDate,
   copy,
   players,
   guessedIds,
@@ -253,13 +260,27 @@ export default function SearchBar({
                     onPointerDown={(event) => event.preventDefault()}
                     onClick={() => selectPlayer(player)}
                   >
-                    <div>
+                    <div className="suggestion-copy">
                       <span className="suggestion-name">{primary}</span>
                       {secondary ? <span className="suggestion-alt">{secondary}</span> : null}
                     </div>
-                    <span className="suggestion-meta">
-                      {getLocalizedTeamName(player.teamShort, locale)} • {player.primaryPosition}
-                    </span>
+                    <div className="suggestion-stats">
+                      <span className="suggestion-stat">
+                        {getLocalizedTeamName(player.teamShort, locale)}
+                      </span>
+                      <span className="suggestion-stat">
+                        {getLocalizedHandednessLabel(player.bats, locale)}
+                        /
+                        {getLocalizedHandednessLabel(player.throws, locale)}
+                      </span>
+                      <span className="suggestion-stat">{player.heightCm} cm</span>
+                      <span className="suggestion-stat">
+                        {calculateAge(player.birthDate, boardDate)}
+                      </span>
+                      <span className="suggestion-stat">
+                        {getLocalizedPositionName(player.primaryPosition, locale)}
+                      </span>
+                    </div>
                   </button>
                 </li>
               );
