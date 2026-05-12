@@ -361,6 +361,12 @@ p {
   margin-bottom: 16px;
 }
 
+.control-side {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
 .section-heading h2,
 .modal-header h2 {
   margin: 0;
@@ -379,6 +385,23 @@ p {
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--panel-soft);
+}
+
+.random-inline {
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel-soft);
+}
+
+.random-pick-button {
+  width: 100%;
+  min-height: 54px;
+  justify-content: center;
+  text-align: center;
 }
 
 .score-inline strong {
@@ -951,6 +974,7 @@ p {
   .page-tools,
   .migration-banner,
   .topbar-card,
+  .control-side,
   .topbar-controls,
   .control-head,
   .search-row,
@@ -961,6 +985,10 @@ p {
 
   .topbar-side {
     align-items: stretch;
+  }
+
+  .control-side {
+    width: 100%;
   }
 
   .account-actions {

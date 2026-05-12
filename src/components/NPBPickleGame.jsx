@@ -414,6 +414,10 @@ export default function NPBPickleGame() {
     () => new Set(gameState?.guessIds ?? []),
     [gameState],
   );
+  const remainingPlayers = useMemo(
+    () => players.filter((player) => !guessedIds.has(player.id)),
+    [guessedIds],
+  );
   const isGameOver = gameState?.status === "won" || gameState?.status === "lost";
   const remainingGuesses = Math.max(MAX_GUESSES - guessedPlayers.length, 0);
   const scoreCaption = isGameOver
@@ -606,6 +610,15 @@ export default function NPBPickleGame() {
     if (nextStatus !== "playing") {
       setIsResultOpen(true);
     }
+  }
+
+  function handleRandomPick() {
+    if (isGameOver || remainingPlayers.length === 0) {
+      return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * remainingPlayers.length);
+    handleGuess(remainingPlayers[randomIndex]);
   }
 
   async function handleShareResults() {
@@ -816,12 +829,25 @@ export default function NPBPickleGame() {
                 <p>{copy.searchDescription}</p>
               </div>
 
-              <div className="score-inline">
-                <span>{copy.scoreLabel}</span>
-                <strong>
-                  {guessedPlayers.length} / {MAX_GUESSES}
-                </strong>
-                <p>{scoreCaption}</p>
+              <div className="control-side">
+                <div className="random-inline">
+                  <button
+                    className="secondary-button random-pick-button"
+                    type="button"
+                    onClick={handleRandomPick}
+                    disabled={isGameOver || remainingPlayers.length === 0}
+                  >
+                    {copy.randomPickLabel}
+                  </button>
+                </div>
+
+                <div className="score-inline">
+                  <span>{copy.scoreLabel}</span>
+                  <strong>
+                    {guessedPlayers.length} / {MAX_GUESSES}
+                  </strong>
+                  <p>{scoreCaption}</p>
+                </div>
               </div>
             </div>
 
