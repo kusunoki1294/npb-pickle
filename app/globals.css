@@ -391,10 +391,6 @@ p {
   min-width: 220px;
   display: flex;
   align-items: center;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--panel-soft);
 }
 
 .random-pick-button {
