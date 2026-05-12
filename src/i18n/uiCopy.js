@@ -79,7 +79,7 @@ export const UI_COPY = {
     menuAria: "Open game menu",
     menuHowTo: "How to Play",
     menuStats: "Stats",
-    menuReset: "Reset Board",
+    menuOtherGame: "プロ野球グリッド",
     menuAbout: "About",
     scoreLabel: "Score",
     winRate: "Win rate",
@@ -91,10 +91,10 @@ export const UI_COPY = {
     searchTitle: "Make a guess",
     searchDescription:
       "Search by English or Japanese name, then submit a full match or choose from the suggestion list.",
-    actionHowTo: "How it works",
+    actionHowTo: "How to Play",
     actionStats: "Stats",
     actionViewResult: "View Result",
-    actionShare: "Share",
+    actionOtherGame: "プロ野球グリッド",
     actionAbout: "About",
     streakLabel: "Streak",
     streakValue: (count) => `${count} days`,
@@ -111,6 +111,8 @@ export const UI_COPY = {
     aboutTitle: "Unofficial fan project",
     aboutDescription:
       "NPB Pickle is an unofficial fan-made guessing game. It is not affiliated with NPB, its teams, or any official baseball organization.",
+    databaseCreditLabel: "Player database credit:",
+    databaseCreditLink: "ProEyeKyuu player registry",
     notices: {
       shareCopied: "Results copied to your clipboard.",
       shareFailed: "Clipboard access failed.",
@@ -203,7 +205,7 @@ export const UI_COPY = {
     menuAria: "ゲームメニューを開く",
     menuHowTo: "遊び方",
     menuStats: "成績",
-    menuReset: "ボードをリセット",
+    menuOtherGame: "NPB Grid",
     menuAbout: "このゲームについて",
     scoreLabel: "スコア",
     winRate: "勝率",
@@ -217,7 +219,7 @@ export const UI_COPY = {
     actionHowTo: "遊び方",
     actionStats: "成績",
     actionViewResult: "結果を見る",
-    actionShare: "共有",
+    actionOtherGame: "NPB Grid",
     actionAbout: "このゲームについて",
     streakLabel: "連勝",
     streakValue: (count) => `${count}日`,
@@ -234,6 +236,8 @@ export const UI_COPY = {
     aboutTitle: "非公式ファン制作",
     aboutDescription:
       "NPB Pickle はファンが制作した非公式ゲームです。NPBおよび各球団、その他の公式団体とは関係ありません。",
+    databaseCreditLabel: "選手データベース提供:",
+    databaseCreditLink: "ProEyeKyuu player registry",
     notices: {
       shareCopied: "結果をクリップボードにコピーしました。",
       shareFailed: "クリップボードへのコピーに失敗しました。",

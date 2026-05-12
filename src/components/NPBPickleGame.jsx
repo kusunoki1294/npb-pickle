@@ -9,7 +9,6 @@ import StatsModal from "@/src/components/StatsModal";
 import { UI_COPY, getPlayerDisplay } from "@/src/i18n/uiCopy";
 import players from "@/src/data/players";
 import {
-  clearDailyGame,
   createInitialGameState,
   hasSeenHowToPlay,
   loadDailyGame,
@@ -17,7 +16,6 @@ import {
   loadStats,
   markHowToPlaySeen,
   recordCompletedGame,
-  removeGameFromStats,
   saveLocale,
   saveDailyGame,
 } from "@/src/utils/localStorage";
@@ -25,6 +23,14 @@ import { getDailyPlayer, getDateKey } from "@/src/utils/getDailyPlayer";
 import { buildShareResults } from "@/src/utils/shareResults";
 
 const MAX_GUESSES = 9;
+const DATABASE_CREDIT_URLS = {
+  en: "https://proeyekyuu.com/player-registry/",
+  ja: "https://proeyekyuu.com/ja/player-registry-jp/",
+};
+const OTHER_GAME_URLS = {
+  en: "https://npb-grid.vercel.app/?lang=en",
+  ja: "https://npb-grid.vercel.app/",
+};
 
 function sanitizeGameState(savedState, mysteryPlayerId, boardNumber, playerMap) {
   const guessIds = Array.isArray(savedState?.guessIds)
@@ -66,6 +72,7 @@ export default function NPBPickleGame() {
     [],
   );
   const copy = UI_COPY[locale];
+  const otherGameUrl = OTHER_GAME_URLS[locale] ?? OTHER_GAME_URLS.en;
 
   useEffect(() => {
     setLocale(loadLocale());
@@ -262,27 +269,6 @@ export default function NPBPickleGame() {
     }
   }
 
-  function handleResetToday() {
-    if (!gameState || !mysteryPlayer) {
-      return;
-    }
-
-    const nextStats = removeGameFromStats(dateKey);
-    const freshGameState = createInitialGameState({
-      dateKey,
-      boardNumber,
-      mysteryPlayerId: mysteryPlayer.id,
-    });
-
-    clearDailyGame(dateKey);
-    setStats(nextStats);
-    setGameState(freshGameState);
-    setNotice(copy.notices.reset);
-    setIsMenuOpen(false);
-    setIsResultOpen(false);
-    setShareMessage("");
-  }
-
   function handleOpenAbout() {
     aboutRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     setIsMenuOpen(false);
@@ -383,9 +369,14 @@ export default function NPBPickleGame() {
                       >
                         {copy.menuStats}
                       </button>
-                      <button type="button" onClick={handleResetToday}>
-                        {copy.menuReset}
-                      </button>
+                      <a
+                        href={otherGameUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {copy.menuOtherGame}
+                      </a>
                       <button type="button" onClick={handleOpenAbout}>
                         {copy.menuAbout}
                       </button>
@@ -452,33 +443,6 @@ export default function NPBPickleGame() {
               >
                 {copy.actionHowTo}
               </button>
-              <button
-                className="toolbar-chip"
-                type="button"
-                onClick={() => setIsStatsOpen(true)}
-              >
-                {copy.actionStats}
-              </button>
-              {isGameOver && !isResultOpen ? (
-                <button
-                  className="toolbar-chip"
-                  type="button"
-                  onClick={() => setIsResultOpen(true)}
-                >
-                  {copy.actionViewResult}
-                </button>
-              ) : (
-                <button
-                  className="toolbar-chip"
-                  type="button"
-                  onClick={handleShareResults}
-                >
-                  {copy.actionShare}
-                </button>
-              )}
-              <button className="toolbar-chip" type="button" onClick={handleOpenAbout}>
-                {copy.actionAbout}
-              </button>
             </div>
           </section>
 
@@ -500,6 +464,17 @@ export default function NPBPickleGame() {
 
           <section className="about-strip" id="about-section" ref={aboutRef}>
             <p>{copy.aboutDescription}</p>
+            <p>
+              {copy.databaseCreditLabel}{" "}
+              <a
+                href={DATABASE_CREDIT_URLS[locale] ?? DATABASE_CREDIT_URLS.en}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {copy.databaseCreditLink}
+              </a>
+              .
+            </p>
           </section>
         </section>
       </main>

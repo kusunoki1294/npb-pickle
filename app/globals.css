@@ -265,17 +265,22 @@ p {
   box-shadow: var(--shadow);
 }
 
-.menu-panel button {
+.menu-panel button,
+.menu-panel a {
   width: 100%;
+  display: block;
   padding: 10px 12px;
   border: 0;
   border-radius: 10px;
   background: transparent;
   color: var(--text);
   text-align: left;
+  text-decoration: none;
 }
 
-.menu-panel button:hover {
+.menu-panel button:hover,
+.menu-panel a:hover,
+.menu-panel a:focus-visible {
   background: #f3f5f2;
 }
 
@@ -370,6 +375,13 @@ p {
   background: var(--panel-soft);
   color: var(--text);
   font-weight: 700;
+}
+
+.toolbar-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .guess-button:disabled,
@@ -590,11 +602,25 @@ p {
 }
 
 .about-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   padding: 14px 16px;
 }
 
 .about-strip p {
   margin: 0;
+}
+
+.about-strip a {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.about-strip a:hover,
+.about-strip a:focus-visible {
+  text-decoration: underline;
 }
 
 .modal-backdrop {
