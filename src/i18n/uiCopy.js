@@ -99,7 +99,7 @@ export const UI_COPY = {
     eyebrow: "NPB Player Guessing Game",
     pageTitle: "NPB Silhouette",
     mastheadDescription:
-      "One mystery player. Nine guesses. Each row checks team, handedness, height, age, and position.",
+      "One mystery player. Nine guesses. Each row checks team, batting and throwing hand, height, age, and position.",
     boardDetailsAria: "Board details",
     progressSummaryAria: "Progress summary",
     boardLabel: "Board",
