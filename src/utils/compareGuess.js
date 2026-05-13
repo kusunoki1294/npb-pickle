@@ -1,8 +1,10 @@
 import calculateAge from "@/src/utils/calculateAge";
 import {
+  expandComparablePositions,
   getLocalizedHandednessLabel,
   getLocalizedPositionName,
   getLocalizedTeamName,
+  isBroadPosition,
 } from "@/src/i18n/uiCopy";
 
 function getHintCopy(locale) {
@@ -71,9 +73,22 @@ function getPositionHint(guess, mysteryPlayer, locale) {
   const copy = getHintCopy(locale);
   const hasExactPrimaryPositionMatch =
     guess.primaryPosition === mysteryPlayer.primaryPosition;
+  const guessMainComparablePositions = isBroadPosition(guess.primaryPosition)
+    ? [guess.primaryPosition, ...expandComparablePositions([guess.primaryPosition])]
+    : [guess.primaryPosition];
+  const mysteryEligiblePositions = [
+    ...new Set([
+      ...mysteryPlayer.positions,
+      ...(isBroadPosition(mysteryPlayer.primaryPosition)
+        ? expandComparablePositions([mysteryPlayer.primaryPosition])
+        : []),
+    ]),
+  ];
   const hasAlternateMainPositionMatch =
     !hasExactPrimaryPositionMatch &&
-    mysteryPlayer.positions.includes(guess.primaryPosition);
+    guessMainComparablePositions.some((position) =>
+      mysteryEligiblePositions.includes(position),
+    );
 
   if (hasExactPrimaryPositionMatch) {
     return copy.primaryPositionMatch;
@@ -94,9 +109,22 @@ export function compareGuess(guess, mysteryPlayer, boardDate, locale = "en") {
   const heightDifference = Math.abs(guess.heightCm - mysteryPlayer.heightCm);
   const hasExactPrimaryPositionMatch =
     guess.primaryPosition === mysteryPlayer.primaryPosition;
+  const guessMainComparablePositions = isBroadPosition(guess.primaryPosition)
+    ? [guess.primaryPosition, ...expandComparablePositions([guess.primaryPosition])]
+    : [guess.primaryPosition];
+  const mysteryEligiblePositions = [
+    ...new Set([
+      ...mysteryPlayer.positions,
+      ...(isBroadPosition(mysteryPlayer.primaryPosition)
+        ? expandComparablePositions([mysteryPlayer.primaryPosition])
+        : []),
+    ]),
+  ];
   const hasAlternateMainPositionMatch =
     !hasExactPrimaryPositionMatch &&
-    mysteryPlayer.positions.includes(guess.primaryPosition);
+    guessMainComparablePositions.some((position) =>
+      mysteryEligiblePositions.includes(position),
+    );
 
   return {
     team: {
