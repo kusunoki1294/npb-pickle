@@ -817,10 +817,7 @@ export default function NPBPickleGame() {
                 </div>
 
                 <div className="score-inline">
-                  <span>{copy.scoreLabel}</span>
-                  <strong>
-                    {guessedPlayers.length} / {MAX_GUESSES}
-                  </strong>
+                  <strong>{copy.scoreValue(guessedPlayers.length)}</strong>
                   <p>{scoreCaption}</p>
                 </div>
               </div>
