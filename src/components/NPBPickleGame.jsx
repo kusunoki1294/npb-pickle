@@ -185,7 +185,9 @@ function sanitizeGameState(savedState, mysteryPlayerId, boardNumber, playerMap) 
 
 export default function NPBPickleGame() {
   const aboutRef = useRef(null);
+  const latestGuessRowRef = useRef(null);
   const menuRef = useRef(null);
+  const shouldScrollToLatestGuessRef = useRef(false);
   const [dateKey, setDateKey] = useState("");
   const [boardNumber, setBoardNumber] = useState(1);
   const [gameState, setGameState] = useState(null);
@@ -422,6 +424,24 @@ export default function NPBPickleGame() {
       : copy.noGuesses
     : copy.guessesRemaining(remainingGuesses);
 
+  useEffect(() => {
+    if (!shouldScrollToLatestGuessRef.current || guessedPlayers.length === 0) {
+      return undefined;
+    }
+
+    shouldScrollToLatestGuessRef.current = false;
+
+    const frameId = window.requestAnimationFrame(() => {
+      latestGuessRowRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "nearest",
+      });
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [guessedPlayers.length]);
+
   function handleAuthFieldChange(field, value) {
     if (!authMode) {
       return;
@@ -592,6 +612,7 @@ export default function NPBPickleGame() {
     const hasLost = !hasWon && nextGuessIds.length >= MAX_GUESSES;
     const nextStatus = hasWon ? "won" : hasLost ? "lost" : "playing";
 
+    shouldScrollToLatestGuessRef.current = true;
     setGameState((currentState) =>
       currentState
         ? {
@@ -877,6 +898,7 @@ export default function NPBPickleGame() {
               boardDate={dateKey}
               copy={copy.board}
               guesses={guessedPlayers}
+              latestGuessRowRef={latestGuessRowRef}
               locale={locale}
               maxGuesses={MAX_GUESSES}
               mysteryPlayer={mysteryPlayer}

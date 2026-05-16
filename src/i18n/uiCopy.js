@@ -341,7 +341,7 @@ export const UI_COPY = {
     eyebrow: "プロ野球選手当てゲーム",
     pageTitle: "プロ野球シルエット",
     mastheadDescription:
-      "ミステリー選手は現役選手です。9回以内で当てます。各行では球団、打投、身長、年齢、守備位置を比較します。",
+      "ミステリー選手は現役選手です。9回以内で当ててください。各行では球団、打投、身長、年齢、守備位置を比較します。",
     boardDetailsAria: "ボード情報",
     progressSummaryAria: "進行状況",
     boardLabel: "ボード",

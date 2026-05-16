@@ -4,6 +4,7 @@ export default function GameBoard({
   boardDate,
   copy,
   guesses,
+  latestGuessRowRef = null,
   locale,
   maxGuesses,
   mysteryPlayer,
@@ -25,13 +26,14 @@ export default function GameBoard({
             ))}
           </div>
 
-          {guesses.map((guess) => (
+          {guesses.map((guess, index) => (
             <GuessRow
               key={guess.id}
               boardDate={boardDate}
               guess={guess}
               locale={locale}
               mysteryPlayer={mysteryPlayer}
+              rowRef={index === guesses.length - 1 ? latestGuessRowRef : null}
             />
           ))}
 

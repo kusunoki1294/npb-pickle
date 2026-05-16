@@ -12,12 +12,18 @@ function DataCell({ cell }) {
   );
 }
 
-export default function GuessRow({ boardDate, guess, locale, mysteryPlayer }) {
+export default function GuessRow({
+  boardDate,
+  guess,
+  locale,
+  mysteryPlayer,
+  rowRef = null,
+}) {
   const result = compareGuess(guess, mysteryPlayer, boardDate, locale);
   const { primary, secondary } = getPlayerDisplay(guess, locale);
 
   return (
-    <div className="guess-row">
+    <div className="guess-row" ref={rowRef}>
       <div className="cell player-cell sticky-cell">
         <div className="player-copy">
           <strong>{primary}</strong>
