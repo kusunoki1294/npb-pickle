@@ -176,7 +176,7 @@ export const UI_COPY = {
     eyebrow: "NPB Player Guessing Game",
     pageTitle: "NPB Silhouette",
     mastheadDescription:
-      "One mystery player. Nine guesses. Each row checks team, batting and throwing hand, height, age, and position.",
+      "The mystery player is always active. Guess them in 9 tries. Each row checks team, batting and throwing hand, height, age, and position.",
     boardDetailsAria: "Board details",
     progressSummaryAria: "Progress summary",
     boardLabel: "Board",
@@ -341,7 +341,7 @@ export const UI_COPY = {
     eyebrow: "プロ野球選手当てゲーム",
     pageTitle: "プロ野球シルエット",
     mastheadDescription:
-      "1人のミステリー選手を9回以内で当てます。各行では球団、打投、身長、年齢、守備位置を比較します。",
+      "ミステリー選手は現役選手です。9回以内で当てます。各行では球団、打投、身長、年齢、守備位置を比較します。",
     boardDetailsAria: "ボード情報",
     progressSummaryAria: "進行状況",
     boardLabel: "ボード",
