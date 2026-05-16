@@ -5,8 +5,20 @@ const LEGACY_STATS_KEY = "npb-pickle:stats:v2";
 const STATS_PREFIX = "npb-pickle:stats:v3:";
 const GUEST_MIGRATION_DECISION_PREFIX = "npb-pickle:guest-migration:v1:";
 
+function getStorage() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
 function canUseStorage() {
-  return typeof window !== "undefined" && Boolean(window.localStorage);
+  return Boolean(getStorage());
 }
 
 function safeParse(rawValue) {
@@ -42,11 +54,61 @@ function getGuestMigrationDecisionKey(userId) {
 }
 
 function readStoredJson(key) {
-  return safeParse(window.localStorage.getItem(key));
+  const storage = getStorage();
+
+  if (!storage) {
+    return null;
+  }
+
+  try {
+    return safeParse(storage.getItem(key));
+  } catch {
+    return null;
+  }
 }
 
 function readStoredText(key) {
-  return window.localStorage.getItem(key);
+  const storage = getStorage();
+
+  if (!storage) {
+    return null;
+  }
+
+  try {
+    return storage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredText(key, value) {
+  const storage = getStorage();
+
+  if (!storage) {
+    return false;
+  }
+
+  try {
+    storage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function removeStoredKey(key) {
+  const storage = getStorage();
+
+  if (!storage) {
+    return false;
+  }
+
+  try {
+    storage.removeItem(key);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function createEmptyGuessDistribution() {
@@ -148,10 +210,7 @@ export function loadDailyGame(dateKey, userId = null) {
   const legacyGuestGame = readStoredJson(getLegacyDailyGameKey(dateKey));
 
   if (legacyGuestGame) {
-    window.localStorage.setItem(
-      getDailyGameKey(dateKey, null),
-      JSON.stringify(legacyGuestGame),
-    );
+    writeStoredText(getDailyGameKey(dateKey, null), JSON.stringify(legacyGuestGame));
   }
 
   return legacyGuestGame;
@@ -162,10 +221,7 @@ export function saveDailyGame(dateKey, gameState, userId = null) {
     return;
   }
 
-  window.localStorage.setItem(
-    getDailyGameKey(dateKey, userId),
-    JSON.stringify(gameState),
-  );
+  writeStoredText(getDailyGameKey(dateKey, userId), JSON.stringify(gameState));
 }
 
 export function clearDailyGame(dateKey, userId = null) {
@@ -173,10 +229,10 @@ export function clearDailyGame(dateKey, userId = null) {
     return;
   }
 
-  window.localStorage.removeItem(getDailyGameKey(dateKey, userId));
+  removeStoredKey(getDailyGameKey(dateKey, userId));
 
   if (!userId) {
-    window.localStorage.removeItem(getLegacyDailyGameKey(dateKey));
+    removeStoredKey(getLegacyDailyGameKey(dateKey));
   }
 }
 
@@ -185,7 +241,7 @@ export function hasSeenHowToPlay() {
     return false;
   }
 
-  return window.localStorage.getItem(HOW_TO_PLAY_KEY) === "true";
+  return readStoredText(HOW_TO_PLAY_KEY) === "true";
 }
 
 export function markHowToPlaySeen() {
@@ -193,7 +249,7 @@ export function markHowToPlaySeen() {
     return;
   }
 
-  window.localStorage.setItem(HOW_TO_PLAY_KEY, "true");
+  writeStoredText(HOW_TO_PLAY_KEY, "true");
 }
 
 export function loadLocale() {
@@ -201,7 +257,7 @@ export function loadLocale() {
     return "en";
   }
 
-  return window.localStorage.getItem(LOCALE_KEY) === "ja" ? "ja" : "en";
+  return readStoredText(LOCALE_KEY) === "ja" ? "ja" : "en";
 }
 
 export function saveLocale(locale) {
@@ -209,7 +265,7 @@ export function saveLocale(locale) {
     return;
   }
 
-  window.localStorage.setItem(LOCALE_KEY, locale === "ja" ? "ja" : "en");
+  writeStoredText(LOCALE_KEY, locale === "ja" ? "ja" : "en");
 }
 
 export function loadStats(userId = null) {
@@ -234,10 +290,7 @@ export function loadStats(userId = null) {
       : {};
 
   if (Object.keys(legacyHistory).length > 0) {
-    window.localStorage.setItem(
-      getStatsKey(null),
-      JSON.stringify({ history: legacyHistory }),
-    );
+    writeStoredText(getStatsKey(null), JSON.stringify({ history: legacyHistory }));
   }
 
   return buildStatsFromHistory(legacyHistory);
@@ -249,7 +302,7 @@ function saveStatsHistory(history, userId = null) {
   }
 
   const nextStats = buildStatsFromHistory(history);
-  window.localStorage.setItem(getStatsKey(userId), JSON.stringify({ history }));
+  writeStoredText(getStatsKey(userId), JSON.stringify({ history }));
   return nextStats;
 }
 
@@ -300,11 +353,23 @@ function listGuestDateKeys() {
     return [];
   }
 
+  const storage = getStorage();
+
+  if (!storage) {
+    return [];
+  }
+
   const guestSuffix = ":guest";
   const dateKeys = new Set();
 
-  for (let index = 0; index < window.localStorage.length; index += 1) {
-    const key = window.localStorage.key(index);
+  for (let index = 0; index < storage.length; index += 1) {
+    let key = null;
+
+    try {
+      key = storage.key(index);
+    } catch {
+      continue;
+    }
 
     if (!key?.startsWith(GAME_PREFIX)) {
       continue;
@@ -334,8 +399,8 @@ function clearGuestScopedData() {
     return;
   }
 
-  window.localStorage.removeItem(getStatsKey(null));
-  window.localStorage.removeItem(LEGACY_STATS_KEY);
+  removeStoredKey(getStatsKey(null));
+  removeStoredKey(LEGACY_STATS_KEY);
 
   for (const dateKey of listGuestDateKeys()) {
     clearDailyGame(dateKey, null);
@@ -359,7 +424,7 @@ export function dismissGuestMigrationPrompt(userId) {
     return;
   }
 
-  window.localStorage.setItem(getGuestMigrationDecisionKey(userId), "dismissed");
+  writeStoredText(getGuestMigrationDecisionKey(userId), "dismissed");
 }
 
 export function migrateGuestDataToUser(userId, { clearGuestData = false } = {}) {
@@ -389,7 +454,7 @@ export function migrateGuestDataToUser(userId, { clearGuestData = false } = {}) 
     saveDailyGame(dateKey, guestGame, userId);
   }
 
-  window.localStorage.setItem(getGuestMigrationDecisionKey(userId), "imported");
+  writeStoredText(getGuestMigrationDecisionKey(userId), "imported");
 
   if (clearGuestData) {
     clearGuestScopedData();

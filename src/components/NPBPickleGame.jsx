@@ -644,8 +644,8 @@ export default function NPBPickleGame() {
   }
 
   function closeHowToPlay() {
-    markHowToPlaySeen();
     setIsHowToPlayOpen(false);
+    markHowToPlaySeen();
   }
 
   if ((!authReady && hasSupabaseConfig) || !gameState || !mysteryPlayer) {

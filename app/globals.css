@@ -811,13 +811,19 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 18px;
+  overflow-y: auto;
+  padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
   background: rgba(23, 35, 26, 0.28);
   backdrop-filter: blur(6px);
+  overscroll-behavior: contain;
 }
 
 .modal-card {
   width: min(540px, 100%);
+  max-height: calc(100vh - 36px);
+  max-height: calc(100dvh - 36px);
+  display: flex;
+  flex-direction: column;
   padding: 22px;
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -931,10 +937,14 @@ p {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  flex-shrink: 0;
 }
 
 .modal-body {
   margin-top: 18px;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .legend-grid,
@@ -1085,6 +1095,7 @@ p {
   .topbar-controls,
   .control-head,
   .search-row,
+  .modal-header,
   .modal-actions {
     flex-direction: column;
     align-items: stretch;
