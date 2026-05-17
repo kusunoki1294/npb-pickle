@@ -325,6 +325,10 @@ export default function SearchBar({
     }
   }
 
+  function closeSuggestions() {
+    setIsOpen(false);
+  }
+
   return (
     <section className="search-panel" ref={searchRef}>
       <form className="search-form" onSubmit={handleSubmit}>
@@ -350,65 +354,98 @@ export default function SearchBar({
         </div>
 
         {isOpen && availableMatches.length > 0 ? (
-          <ul className="suggestion-list">
-            {availableMatches.map((player) => {
-              const { primary, secondary } = getPlayerDisplay(player, locale);
-              const statuses = getSuggestionStatuses(
-                player,
-                knownFacts,
-                mysteryPlayer,
-                boardDate,
-              );
+          <>
+            <button
+              aria-label={copy.sheetClose}
+              className="suggestion-backdrop"
+              onClick={closeSuggestions}
+              tabIndex={-1}
+              type="button"
+            />
 
-              return (
-                <li key={player.id}>
-                  <button
-                    className="suggestion-item"
-                    type="button"
-                    onPointerDown={(event) => event.preventDefault()}
-                    onClick={() => selectPlayer(player)}
-                  >
-                    <div className="suggestion-copy">
-                      <span className="suggestion-name">{primary}</span>
-                      {secondary ? <span className="suggestion-alt">{secondary}</span> : null}
-                    </div>
-                    <div className="suggestion-stats">
-                      <span className={`suggestion-stat${statuses.team ? ` ${statuses.team}` : ""}`}>
-                        {getLocalizedTeamName(player.teamShort, locale)}
-                      </span>
-                      <span className={`suggestion-stat${statuses.bats ? ` ${statuses.bats}` : ""}`}>
-                        {getLocalizedHandednessLabel(player.bats, locale)}
-                      </span>
-                      <span
-                        className={`suggestion-stat${
-                          statuses.throws ? ` ${statuses.throws}` : ""
-                        }`}
+            <div className="suggestion-surface">
+              <div className="suggestion-sheet-header">
+                <span className="suggestion-sheet-handle" aria-hidden="true" />
+                <div className="suggestion-sheet-copy">
+                  <strong>{copy.sheetTitle}</strong>
+                  <p>{copy.chooseDropdown}</p>
+                </div>
+                <button
+                  className="toolbar-chip suggestion-sheet-close"
+                  onClick={closeSuggestions}
+                  type="button"
+                >
+                  {copy.sheetClose}
+                </button>
+              </div>
+
+              <ul className="suggestion-list" role="listbox" aria-label={copy.sheetTitle}>
+                {availableMatches.map((player) => {
+                  const { primary, secondary } = getPlayerDisplay(player, locale);
+                  const statuses = getSuggestionStatuses(
+                    player,
+                    knownFacts,
+                    mysteryPlayer,
+                    boardDate,
+                  );
+
+                  return (
+                    <li key={player.id}>
+                      <button
+                        className="suggestion-item"
+                        type="button"
+                        onPointerDown={(event) => event.preventDefault()}
+                        onClick={() => selectPlayer(player)}
                       >
-                        {getLocalizedHandednessLabel(player.throws, locale)}
-                      </span>
-                      <span
-                        className={`suggestion-stat${
-                          statuses.height ? ` ${statuses.height}` : ""
-                        }`}
-                      >
-                        {player.heightCm} cm
-                      </span>
-                      <span className={`suggestion-stat${statuses.age ? ` ${statuses.age}` : ""}`}>
-                        {calculateAge(player.birthDate, boardDate)}
-                      </span>
-                      <span
-                        className={`suggestion-stat${
-                          statuses.position ? ` ${statuses.position}` : ""
-                        }`}
-                      >
-                        {getLocalizedPositionName(player.primaryPosition, locale)}
-                      </span>
-                    </div>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+                        <div className="suggestion-copy">
+                          <span className="suggestion-name">{primary}</span>
+                          {secondary ? <span className="suggestion-alt">{secondary}</span> : null}
+                        </div>
+                        <div className="suggestion-stats">
+                          <span
+                            className={`suggestion-stat${statuses.team ? ` ${statuses.team}` : ""}`}
+                          >
+                            {getLocalizedTeamName(player.teamShort, locale)}
+                          </span>
+                          <span
+                            className={`suggestion-stat${statuses.bats ? ` ${statuses.bats}` : ""}`}
+                          >
+                            {getLocalizedHandednessLabel(player.bats, locale)}
+                          </span>
+                          <span
+                            className={`suggestion-stat${
+                              statuses.throws ? ` ${statuses.throws}` : ""
+                            }`}
+                          >
+                            {getLocalizedHandednessLabel(player.throws, locale)}
+                          </span>
+                          <span
+                            className={`suggestion-stat${
+                              statuses.height ? ` ${statuses.height}` : ""
+                            }`}
+                          >
+                            {player.heightCm} cm
+                          </span>
+                          <span
+                            className={`suggestion-stat${statuses.age ? ` ${statuses.age}` : ""}`}
+                          >
+                            {calculateAge(player.birthDate, boardDate)}
+                          </span>
+                          <span
+                            className={`suggestion-stat${
+                              statuses.position ? ` ${statuses.position}` : ""
+                            }`}
+                          >
+                            {getLocalizedPositionName(player.primaryPosition, locale)}
+                          </span>
+                        </div>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </>
         ) : null}
       </form>
 

@@ -496,16 +496,38 @@ p {
 
 .suggestion-list {
   list-style: none;
-  position: absolute;
-  left: 0;
-  right: 0;
-  z-index: 15;
-  margin: 8px 0 0;
+  margin: 0;
   padding: 6px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--panel);
   box-shadow: var(--shadow);
+}
+
+.suggestion-backdrop {
+  display: none;
+}
+
+.suggestion-surface {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 15;
+}
+
+.suggestion-sheet-header {
+  display: none;
+}
+
+.suggestion-sheet-copy p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.suggestion-sheet-handle {
+  display: none;
 }
 
 .suggestion-item {
@@ -1136,6 +1158,66 @@ p {
     left: 0;
     right: 0;
     width: auto;
+  }
+
+  .suggestion-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 24;
+    display: block;
+    border: 0;
+    background: rgba(23, 35, 26, 0.22);
+    backdrop-filter: blur(4px);
+  }
+
+  .suggestion-surface {
+    position: fixed;
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
+    bottom: 0;
+    top: auto;
+    z-index: 25;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: min(72vh, 72dvh);
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+    border: 1px solid var(--border);
+    border-bottom: 0;
+    border-radius: 20px 20px 0 0;
+    background: var(--panel);
+    box-shadow: 0 -18px 36px rgba(14, 25, 16, 0.14);
+  }
+
+  .suggestion-sheet-header {
+    display: grid;
+    gap: 10px;
+  }
+
+  .suggestion-sheet-handle {
+    display: block;
+    width: 46px;
+    height: 5px;
+    justify-self: center;
+    border-radius: 999px;
+    background: #c9d0c9;
+  }
+
+  .suggestion-sheet-copy strong {
+    display: block;
+  }
+
+  .suggestion-sheet-close {
+    justify-self: end;
+  }
+
+  .suggestion-list {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 }
 

@@ -238,6 +238,8 @@ export const UI_COPY = {
       noMatchingPlayer:
         "No matching player was found. Try a full English or Japanese name.",
       chooseDropdown: "Choose one of the matching players from the dropdown.",
+      sheetTitle: "Matching players",
+      sheetClose: "Close",
       placeholder: "Search by English or Japanese player name...",
       ariaLabel: "Search player names",
       roundComplete: "Round Complete",
@@ -401,6 +403,8 @@ export const UI_COPY = {
       noMatchingPlayer:
         "一致する選手が見つかりませんでした。英語名または日本語名をフルネームで試してください。",
       chooseDropdown: "候補リストから選手を選んでください。",
+      sheetTitle: "候補から選択",
+      sheetClose: "閉じる",
       placeholder: "英語名または日本語名で検索...",
       ariaLabel: "選手名を検索",
       roundComplete: "終了",
